@@ -1,8 +1,9 @@
 {
   "name": "Person Tracker Card",
-  "content_in_root": true,
-  "filename": "person-tracker-card.js",
   "render_readme": true,
+  "filename": "person-tracker-card.js",
+  "country": "IT",
   "homeassistant": "2023.1.0",
-  "country": ["IT"]
+  "content_in_root": true,
+  "icon": "https://raw.githubusercontent.com/djdevil/person-tracker-card/main/icon.png"
 }
