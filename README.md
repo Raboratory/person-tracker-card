@@ -35,7 +35,7 @@ Advanced card for Home Assistant that displays detailed information about people
 3. Click on the three dots in the top right
 4. Select "Custom repositories"
 5. Add this URL: `https://github.com/djdevil/person-tracker-card`
-6. Select category "Lovelace"
+6. Select category "Dashboard"
 7. Click "Add"
 8. Search for "Person Tracker Card" and install it
 9. Restart Home Assistant
@@ -104,7 +104,7 @@ show_connection: true
 3. Clicca sui tre puntini in alto a destra
 4. Seleziona "Repository personalizzati"
 5. Aggiungi questo URL: `https://github.com/djdevil/person-tracker-card`
-6. Seleziona categoria "Lovelace"
+6. Seleziona categoria "Dashboard"
 7. Clicca su "Aggiungi"
 8. Cerca "Person Tracker Card" e installala
 9. Riavvia Home Assistant
