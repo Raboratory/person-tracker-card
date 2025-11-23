@@ -432,7 +432,7 @@ class PersonTrackerCard extends LitElement {
                    style="font-size: ${this.config.activity_font_size};
                           ${Object.entries(activityPos).map(([k, v]) => `${k}: ${v}`).join('; ')}">
                 <ha-icon icon="${activityIcon}" .style=${'width: 16px; height: 16px;'}></ha-icon>
-                <span style="margin-left: 4px; font-size: 11px;">${this._activity}</span>
+                <span style="margin-left: 4px; font-size: 11px;">${this._localize('activity.' + this._activity) || this._activity}</span>
               </div>
             ` : ''}
 
