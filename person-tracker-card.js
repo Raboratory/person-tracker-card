@@ -561,7 +561,9 @@ class PersonTrackerCard extends LitElement {
 
     const stateStyles = stateConfig?.styles?.name || {};
     const activityIcon = this._getActivityIcon();
-    const connectionIcon = this._connectionType === 'Wi-Fi' ? 'mdi:wifi' : 'mdi:signal';
+    const type = this._connectionType.toLowerCase().replace(/[^a-z]/g, '');
+    const connectionIcon = type === 'wifi' ? 'mdi:wifi' : 'mdi:signal';
+
 
     // Calcola aspect ratio
     const [widthRatio, heightRatio] = (this.config.aspect_ratio || '1/1')
