@@ -1,8 +1,14 @@
-// Person Tracker Card v2.2 - Multilanguage Version
+// Person Tracker Card v2.0.0 - Multilanguage Version
 // Full support for all editor options
-// Languages: Italian (default), English, French, German
+// Languages: English (default), Italian, French, German
 
-console.log("Person Tracker Card v2.2 Multilanguage loading...");
+console.log(
+  "%c PERSON TRACKER CARD %c v1.1.1 %c",
+  "background: #4CAF50; color: white; font-weight: bold; padding: 3px 7px; border-radius: 3px 0 0 3px;",
+  "background: #2196F3; color: white; font-weight: bold; padding: 3px 7px; border-radius: 0 3px 3px 0;",
+  "background: transparent"
+);
+console.log("🌍 Multilanguage: EN | IT | FR | DE");
 
 const LitElement = Object.getPrototypeOf(
   customElements.get("ha-panel-lovelace") || customElements.get("hui-view")
@@ -173,6 +179,10 @@ class LocalizationHelper {
 }
 
 class PersonTrackerCard extends LitElement {
+  static get version() {
+    return '2.0.0';
+  }
+
   static get properties() {
     return {
       hass: { attribute: false },
