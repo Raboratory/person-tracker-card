@@ -18,7 +18,7 @@ class EditorLocalizationHelper {
 
   loadTranslations() {
     const haLanguage = this.hass?.language || this.hass?.locale?.language || 'en';
-    
+
     const languageMap = {
       'it': 'it',
       'it-IT': 'it',
@@ -48,7 +48,8 @@ class EditorLocalizationHelper {
         'editor.show_altitude': 'Mostra altitudine',
         'editor.show_source': 'Mostra fonte',
         'editor.show_entity_picture': 'Mostra immagine',
-        'editor.show_name': 'Mostra nome',
+        'editor.show_name': 'Mostra stato',
+        'editor.show_person_name': 'Mostra nome persona',
         'editor.show_activity': 'Mostra attività',
         'editor.show_watch_battery': 'Mostra batteria smartwatch',
         'editor.show_travel_time': 'Mostra tempo di viaggio',
@@ -72,6 +73,7 @@ class EditorLocalizationHelper {
         'editor.custom_image': 'Immagine personalizzata',
         'editor.name_font_size': 'Dimensione font nome',
         'editor.state_font_size': 'Dimensione font stato',
+        'editor.last_changed_font_size': 'Dimensione font ultimo aggiornamento',
         'editor.card_background': 'Sfondo card',
         'editor.border_radius': 'Raggio bordo',
         'editor.image_size': 'Dimensione immagine (%)',
@@ -118,7 +120,8 @@ class EditorLocalizationHelper {
         'editor.show_altitude': 'Show altitude',
         'editor.show_source': 'Show source',
         'editor.show_entity_picture': 'Show picture',
-        'editor.show_name': 'Show name',
+        'editor.show_name': 'Show state',
+        'editor.show_person_name': 'Show person name',
         'editor.show_activity': 'Show activity',
         'editor.show_watch_battery': 'Show watch battery',
         'editor.show_travel_time': 'Show travel time',
@@ -142,6 +145,7 @@ class EditorLocalizationHelper {
         'editor.custom_image': 'Custom image',
         'editor.name_font_size': 'Name font size',
         'editor.state_font_size': 'State font size',
+        'editor.last_changed_font_size': 'Last changed font size',
         'editor.card_background': 'Card background',
         'editor.border_radius': 'Border radius',
         'editor.image_size': 'Image size (%)',
@@ -187,7 +191,8 @@ class EditorLocalizationHelper {
         'editor.show_altitude': 'Afficher altitude',
         'editor.show_source': 'Afficher source',
         'editor.show_entity_picture': 'Afficher image',
-        'editor.show_name': 'Afficher nom',
+        'editor.show_name': 'Afficher l\'état',
+        'editor.show_person_name': 'Afficher nom de la personne',
         'editor.show_activity': 'Afficher activité',
         'editor.show_watch_battery': 'Afficher batterie montre',
         'editor.show_travel_time': 'Afficher temps de trajet',
@@ -212,6 +217,7 @@ class EditorLocalizationHelper {
         'editor.custom_image': 'Image personnalisée',
         'editor.name_font_size': 'Taille police nom',
         'editor.state_font_size': 'Taille police état',
+        'editor.last_changed_font_size': 'Taille police dernière mise à jour',
         'editor.card_background': 'Fond carte',
         'editor.border_radius': 'Rayon bordure',
         'editor.image_size': 'Taille image (%)',
@@ -257,7 +263,8 @@ class EditorLocalizationHelper {
         'editor.show_altitude': 'Höhe anzeigen',
         'editor.show_source': 'Quelle anzeigen',
         'editor.show_entity_picture': 'Bild anzeigen',
-        'editor.show_name': 'Name anzeigen',
+        'editor.show_name': ' Status anzeigen',
+        'editor.show_person_name': 'Personenname anzeigen',
         'editor.show_activity': 'Aktivität anzeigen',
         'editor.show_watch_battery': 'Uhr-Batterie anzeigen',
         'editor.show_travel_time': 'Reisezeit anzeigen',
@@ -282,6 +289,7 @@ class EditorLocalizationHelper {
         'editor.custom_image': 'Benutzerdefiniertes Bild',
         'editor.name_font_size': 'Schriftgröße Name',
         'editor.state_font_size': 'Schriftgröße Status',
+        'editor.last_changed_font_size': 'Schriftgröße Letzte Änderung',
         'editor.card_background': 'Kartenhintergrund',
         'editor.border_radius': 'Randradius',
         'editor.image_size': 'Bildgröße (%)',
@@ -322,12 +330,12 @@ class EditorLocalizationHelper {
     if (langTranslations && langTranslations[key]) {
       return langTranslations[key];
     }
-    
+
     const defaultTranslations = this.translations['en'];
     if (defaultTranslations && defaultTranslations[key]) {
       return defaultTranslations[key];
     }
-    
+
     return key;
   }
 }
@@ -364,6 +372,7 @@ class PersonTrackerCardEditor extends LitElement {
       layout: 'classic',
       compact_width: 300,
       show_entity_picture: true,
+      show_person_name: true,
       show_name: true,
       show_last_changed: true,
       show_battery: true,
@@ -764,6 +773,14 @@ class PersonTrackerCardEditor extends LitElement {
         </div>
 
         <div class="config-row">
+          <span class="config-label">${this._t('editor.show_person_name')}</span>
+          <ha-switch
+            .checked=${this._config.show_person_name !== false}
+            @change=${(e) => this._valueChanged(e, 'show_person_name')}>
+          </ha-switch>
+        </div>
+
+        <div class="config-row">
           <span class="config-label">${this._t('editor.show_name')}</span>
           <ha-switch
             .checked=${this._config.show_name !== false}
@@ -1069,6 +1086,13 @@ class PersonTrackerCardEditor extends LitElement {
               @input=${(e) => this._valueChanged(e, 'state_font_size')}>
             </ha-textfield>
           </div>
+
+          <ha-textfield
+            label="${this._t('editor.last_changed_font_size')}"
+            .value=${this._config.last_changed_font_size || '12px'}
+            @input=${(e) => this._valueChanged(e, 'last_changed_font_size')}
+            helper-text="E.g.: 12px, 0.9em, 14px">
+          </ha-textfield>
         ` : ''}
 
         <ha-textfield
@@ -1169,7 +1193,7 @@ class PersonTrackerCardEditor extends LitElement {
     if (!this._config || !this.hass) return;
 
     ev.stopPropagation();
-    
+
     const target = ev.target;
     const value = target.value;
 
@@ -1330,7 +1354,7 @@ class PersonTrackerCardEditor extends LitElement {
 // Register the editor
 if (!customElements.get('person-tracker-card-editor')) {
   customElements.define('person-tracker-card-editor', PersonTrackerCardEditor);
-  console.log('Person Tracker Card Editor registered (fixed version)');
+  console.log('Person Tracker Card Editor registered');
 }
 
 // Export for the main card

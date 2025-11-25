@@ -1,14 +1,11 @@
-// Person Tracker Card v2.0.0 - Multilanguage Version
+// Person Tracker Card v1.1.2 - Multilanguage Version
 // Full support for all editor options
-// Languages: English (default), Italian, French, German
+// Languages: Italian (default), English, French, German
+// v1.1.2: Added dynamic unit of measurement for distance sensor
+// v1.1.2: Activity icon now follows entity's icon attribute with fallback to predefined mapping
+// v1.1.2: Fixed WiFi detection for Android (case-insensitive check for "wifi", "Wi-Fi", etc.)
 
-console.log(
-  "%c PERSON TRACKER CARD %c v1.1.1 %c",
-  "background: #4CAF50; color: white; font-weight: bold; padding: 3px 7px; border-radius: 3px 0 0 3px;",
-  "background: #2196F3; color: white; font-weight: bold; padding: 3px 7px; border-radius: 0 3px 3px 0;",
-  "background: transparent"
-);
-console.log("🌍 Multilanguage: EN | IT | FR | DE");
+console.log("Person Tracker Card v1.1.2 Multilanguage loading...");
 
 const LitElement = Object.getPrototypeOf(
   customElements.get("ha-panel-lovelace") || customElements.get("hui-view")
@@ -28,7 +25,7 @@ class LocalizationHelper {
   loadTranslations() {
     // Get language from Home Assistant
     const haLanguage = this.hass?.language || this.hass?.locale?.language || 'en';
-    
+
     // Map HA language codes to our supported languages
     const languageMap = {
       'it': 'it',
@@ -166,23 +163,19 @@ class LocalizationHelper {
     if (langTranslations && langTranslations[key]) {
       return langTranslations[key];
     }
-    
+
     // Fallback to English
     const defaultTranslations = this.translations['en'];
     if (defaultTranslations && defaultTranslations[key]) {
       return defaultTranslations[key];
     }
-    
+
     // Fallback to key itself
     return key;
   }
 }
 
 class PersonTrackerCard extends LitElement {
-  static get version() {
-    return '2.0.0';
-  }
-
   static get properties() {
     return {
       hass: { attribute: false },
@@ -190,8 +183,10 @@ class PersonTrackerCard extends LitElement {
       _batteryLevel: { state: true },
       _batteryIcon: { state: true },
       _activity: { state: true },
+      _activityIcon: { state: true },
       _connectionType: { state: true },
       _distanceFromHome: { state: true },
+      _distanceUnit: { state: true },
       _travelTime: { state: true },
       _watchBatteryLevel: { state: true },
       _watchBatteryIcon: { state: true }
@@ -203,8 +198,10 @@ class PersonTrackerCard extends LitElement {
     this._batteryLevel = 0;
     this._batteryIcon = 'mdi:battery';
     this._activity = 'unknown';
+    this._activityIcon = '';
     this._connectionType = 'unknown';
     this._distanceFromHome = 0;
+    this._distanceUnit = 'km';
     this._watchBatteryLevel = 0;
     this._watchBatteryIcon = 'mdi:battery';
     this._travelTime = 0;
@@ -227,7 +224,7 @@ class PersonTrackerCard extends LitElement {
   // Translate common entity states
   _translateState(state) {
     if (!state) return this._t('common.unknown');
-    
+
     const stateMap = {
       'home': 'common.home',
       'not_home': 'common.not_home',
@@ -241,13 +238,13 @@ class PersonTrackerCard extends LitElement {
 
   // Support for the visual editor
   static async getConfigElement() {
-    // Try the fixed version first, then the standard one
-    await import('./person-tracker-card-editor-fixed.js').catch(async () => {
-      await import('./person-tracker-card-editor.js').catch(() => {
-        console.warn('Editor not found');
-      });
-    });
-    return document.createElement('person-tracker-card-editor');
+    try {
+      await import('./person-tracker-card-editor.js');
+      return document.createElement('person-tracker-card-editor');
+    } catch (error) {
+      console.error('Person Tracker Card Editor not found:', error);
+      return document.createElement('div');
+    }
   }
 
   static getStubConfig(hass) {
@@ -283,6 +280,7 @@ class PersonTrackerCard extends LitElement {
       compact_width: 300,
       // Display
       show_entity_picture: true,
+      show_person_name: true,
       show_name: true,
       show_last_changed: true,
       show_battery: true,
@@ -297,6 +295,7 @@ class PersonTrackerCard extends LitElement {
       // General styles
       name_font_size: '20px',
       state_font_size: '14px',
+      last_changed_font_size: '12px',
       card_background: 'rgba(255,255,255,0.05)',
       card_border_radius: '15px',
       picture_size: 55,
@@ -418,6 +417,13 @@ class PersonTrackerCard extends LitElement {
       const activityEntity = this.hass.states[activityEntityId];
       if (activityEntity) {
         this._activity = activityEntity.state;
+        // Legge l'icona dall'attributo icon dell'entità, se non presente usa il mapping hardcoded
+        if (activityEntity.attributes?.icon) {
+          this._activityIcon = activityEntity.attributes.icon;
+        } else {
+          // Fallback alle icone predefinite
+          this._activityIcon = this._getActivityIcon();
+        }
       }
     }
 
@@ -436,6 +442,8 @@ class PersonTrackerCard extends LitElement {
       const wazeEntity = this.hass.states[distanceEntityId];
       if (wazeEntity) {
         this._distanceFromHome = parseFloat(wazeEntity.state) || 0;
+        // Legge l'unità di misura dall'entità, default 'km'
+        this._distanceUnit = wazeEntity.attributes?.unit_of_measurement || 'km';
       }
     }
 
@@ -469,6 +477,13 @@ class PersonTrackerCard extends LitElement {
     if (batteryLevel < 50) return '#ffa229';
     if (batteryLevel < 80) return '#8bc34a';
     return '#50A14F';
+  }
+
+  // Check if connection type is WiFi (case-insensitive, handles iOS "Wi-Fi" and Android "wifi")
+  _isWifiConnection(connectionType) {
+    if (!connectionType) return false;
+    const normalized = connectionType.toLowerCase().replace(/[-_\s]/g, '');
+    return normalized === 'wifi';
   }
 
 
@@ -560,10 +575,8 @@ class PersonTrackerCard extends LitElement {
     const isCustomImage = !!this.config.entity_picture;
 
     const stateStyles = stateConfig?.styles?.name || {};
-    const activityIcon = this._getActivityIcon();
-    const type = this._connectionType.toLowerCase().replace(/[^a-z]/g, '');
-    const connectionIcon = type === 'wifi' ? 'mdi:wifi' : 'mdi:signal';
-
+    const activityIcon = this._activityIcon;
+    const connectionIcon = this._isWifiConnection(this._connectionType) ? 'mdi:wifi' : 'mdi:signal';
 
     // Calcola aspect ratio
     const [widthRatio, heightRatio] = (this.config.aspect_ratio || '1/1')
@@ -583,27 +596,43 @@ class PersonTrackerCard extends LitElement {
       <ha-card style="background: ${this.config.card_background}; border-radius: ${this.config.card_border_radius}">
         <div class="card-container" style="padding-bottom: ${paddingBottom}">
           <div class="card-content">
-            ${this.config.show_entity_picture && entityPicture ? html`
-              <div class="entity-picture" style="width: ${this.config.picture_size}%;">
-                <img
-                  src="${stateConfig?.entity_picture || entityPicture}"
-                  alt="${entity.attributes?.friendly_name || this.config.name || 'Person'}"
-                  class="${stateConfig?.entity_picture ? 'custom-state-image' : (isCustomImage ? 'custom-image' : '')}"
-                />
-              </div>
-            ` : ''}
+            <!-- Sezione superiore con foto, nome e stato -->
+            <div class="content-top">
+              ${this.config.show_entity_picture && entityPicture ? html`
+                <div class="entity-picture" style="width: ${this.config.picture_size}%;">
+                  <img
+                    src="${stateConfig?.entity_picture || entityPicture}"
+                    alt="${entity.attributes?.friendly_name || this.config.name || 'Person'}"
+                    class="${stateConfig?.entity_picture ? 'custom-state-image' : (isCustomImage ? 'custom-image' : '')}"
+                  />
+                </div>
+              ` : ''}
 
-            ${this.config.show_name ? html`
-              <div class="entity-name"
-                   style="font-size: ${this.config.name_font_size};
-                          color: ${stateStyles.color || 'inherit'}">
-                ${stateName}
-              </div>
-            ` : ''}
+              ${this.config.show_person_name ? html`
+                <div class="entity-person-name"
+                     style="font-size: ${this.config.name_font_size};
+                            margin-top: ${this.config.show_entity_picture ? `calc(${this.config.name_font_size} * 0.4)` : '0'};">
+                  ${entity.attributes?.friendly_name || this.config.name || 'Person'}
+                </div>
+              ` : ''}
 
+              ${this.config.show_name ? html`
+                <div class="entity-state-name"
+                     style="font-size: ${this.config.state_font_size};
+                            color: ${stateStyles.color || 'var(--secondary-text-color)'};
+                            margin-top: ${this.config.show_person_name ? `calc(${this.config.name_font_size} * 0.3)` : (this.config.show_entity_picture ? '16px' : '0')};">
+                  ${stateName}
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- Sezione inferiore sempre in basso -->
             ${this.config.show_last_changed ? html`
-              <div class="entity-state" style="font-size: ${this.config.state_font_size}">
-                ${this._getRelativeTime(entity.last_changed)}
+              <div class="content-bottom">
+                <div class="entity-last-changed"
+                     style="font-size: ${this.config.last_changed_font_size};">
+                  ${this._getRelativeTime(entity.last_changed)}
+                </div>
               </div>
             ` : ''}
 
@@ -643,7 +672,7 @@ class PersonTrackerCard extends LitElement {
                    style="font-size: ${this.config.distance_font_size};
                           ${Object.entries(distancePos).map(([k, v]) => `${k}: ${v}`).join('; ')}">
                 <ha-icon icon="mdi:home" .style=${'width: 16px; height: 16px;'}></ha-icon>
-                <span>${Math.round(this._distanceFromHome)} ${this._t('units.km')}</span>
+                <span>${Math.round(this._distanceFromHome)} ${this._distanceUnit}</span>
               </div>
             ` : ''}
 
@@ -672,34 +701,33 @@ class PersonTrackerCard extends LitElement {
   _renderCompactLayout() {
     const entity = this.hass.states[this.config.entity];
     const stateConfig = this._getCurrentStateConfig();
-    
+
     // Nome della persona (non dello stato!)
     const personName = this.config.name || entity.attributes?.friendly_name || 'Person';
-    
+
     // Nome dello stato personalizzato (location)
     const displayLocation = stateConfig?.name || this._translateState(entity.state);
-    
+
     const entityPicture = stateConfig?.entity_picture || this.config.entity_picture || entity.attributes?.entity_picture;
     const stateStyles = stateConfig?.styles?.name || {};
-    
+
     // Activity icon e color
-    const activityIcon = this._getActivityIcon();
+    const activityIcon = this._activityIcon;
     let activityColor = 'var(--secondary-text-color)';
     if (this._activity === 'Stationary') activityColor = 'green';
     else if (this._activity === 'Walking' || this._activity === 'Running') activityColor = 'orange';
     else if (this._activity === 'Automotive') activityColor = 'blue';
-    
+
     // Connection
-    const type = this._connectionType.toLowerCase().replace(/[^a-z]/g, '');
-    const connectionIcon = type === 'wifi' ? 'mdi:wifi' : 'mdi:signal';
-    const connectionColor = type === 'wifi' ? 'blue' : 'orange';
-    
+    const connectionIcon = this._isWifiConnection(this._connectionType) ? 'mdi:wifi' : 'mdi:signal';
+    const connectionColor = this._isWifiConnection(this._connectionType) ? 'blue' : 'orange';
+
     // Battery color
     const batteryColor = this._getBatteryColor();
-    
+
     // Larghezza configurabile
     const maxWidth = this.config.compact_width || 300;
-    
+
     return html`
       <ha-card style="background: ${this.config.card_background}; border-radius: ${this.config.card_border_radius}; padding: 8px; max-width: ${maxWidth}px;">
         <div class="compact-grid">
@@ -708,36 +736,36 @@ class PersonTrackerCard extends LitElement {
               <img src="${entityPicture}" alt="${personName}" />
             </div>
           ` : ''}
-          
+
           ${this.config.show_name ? html`
             <div class="compact-name" style="color: inherit">
               ${personName}
             </div>
           ` : ''}
-          
+
           <div class="compact-location" style="color: ${stateStyles.color || 'var(--secondary-text-color)'}">
             ${displayLocation}
           </div>
-          
+
           <div class="compact-icons">
             ${this.config.show_activity && activityIcon ? html`
               <div class="compact-icon-badge">
                 <ha-icon icon="${activityIcon}" style="--mdc-icon-size: 16px; color: ${activityColor};"></ha-icon>
               </div>
             ` : ''}
-            
+
             ${this.config.show_connection ? html`
               <div class="compact-icon-badge">
                 <ha-icon icon="${connectionIcon}" style="--mdc-icon-size: 16px; color: ${connectionColor};"></ha-icon>
               </div>
             ` : ''}
-            
+
             ${this.config.show_battery ? html`
               <div class="compact-icon-badge">
                 <span style="font-size: 9px; font-weight: bold; color: ${batteryColor};">${this._batteryLevel}%</span>
               </div>
             ` : ''}
-            
+
             ${this.config.show_watch_battery ? html`
               <div class="compact-icon-badge">
                 <span>⌚</span>
@@ -746,16 +774,16 @@ class PersonTrackerCard extends LitElement {
                 </span>
               </div>
             ` : ''}
-            
+
             ${this.config.show_distance && this._distanceFromHome > 0 ? html`
               <div class="compact-icon-badge" style="flex-direction: column;">
                 <ha-icon icon="mdi:home" style="--mdc-icon-size: 12px;"></ha-icon>
                 <span style="font-size: 8px; font-weight: bold; color: #4A9EFF; margin-top: -2px;">
-                  ${Math.round(this._distanceFromHome)}
+                  ${Math.round(this._distanceFromHome)}${this._distanceUnit}
                 </span>
               </div>
             ` : ''}
-            
+
             ${this.config.show_travel_time && this._travelTime > 0 ? html`
               <div class="compact-icon-badge" style="flex-direction: column;">
                 <ha-icon icon="mdi:car-clock" style="--mdc-icon-size: 12px;"></ha-icon>
@@ -803,15 +831,30 @@ class PersonTrackerCard extends LitElement {
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
         padding: 16px;
+      }
+
+      .content-top {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+      }
+
+      .content-bottom {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        margin-top: auto;
       }
 
       .entity-picture {
         display: flex;
         justify-content: center;
         align-items: center;
-        margin: 0 auto 16px auto; /* Adds 16px below the image */
+        margin: 0 auto 0 auto;
         max-width: 100%;
         max-height: 100%;
       }
@@ -870,6 +913,26 @@ class PersonTrackerCard extends LitElement {
 
       .custom-field.watch-battery {
         font-weight: 500;
+      }
+
+      .entity-person-name {
+        font-weight: 600;
+        text-align: center;
+        color: var(--primary-text-color);
+        line-height: 1.2;
+      }
+
+      .entity-state-name {
+        font-weight: 500;
+        text-align: center;
+        line-height: 1.3;
+      }
+
+      .entity-last-changed {
+        color: var(--secondary-text-color);
+        text-align: center;
+        font-size: 0.9em;
+        line-height: 1.2;
       }
 
       .entity-name {
@@ -1007,7 +1070,7 @@ class PersonTrackerCard extends LitElement {
 if (!customElements.get('person-tracker-card')) {
   customElements.define('person-tracker-card', PersonTrackerCard);
   console.info(
-    '%c PERSON-TRACKER-CARD %c v2.1 FIXED %c Full Editor! ',
+    '%c PERSON-TRACKER-CARD %c v1.1.2 %c! ',
     'background-color: #7DDA9F; color: black; font-weight: bold;',
     'background-color: #93ADCB; color: white; font-weight: bold;',
     'background-color: #FFD700; color: black; font-weight: bold;'
