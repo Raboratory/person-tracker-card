@@ -460,6 +460,7 @@ class PersonTrackerCard extends LitElement {
       'Cycling': 'mdi:bike',
       'Still': 'mdi:human-handsdown',
       'Unknown': 'mdi:help',
+      'unknown': 'mdi:progress-question',
       'in_vehicle': 'mdi:car',
       'on_bicycle': 'mdi:bike',
       'on_foot': 'mdi:human',
