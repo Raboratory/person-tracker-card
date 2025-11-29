@@ -1,11 +1,12 @@
-// Person Tracker Card v1.1.2 - Multilanguage Version
+// Person Tracker Card v1.2.0 - Multilanguage Version
 // Full support for all editor options
 // Languages: Italian (default), English, French, German
+// v1.2.0: Added Modern layout with circular progress indicators for battery and travel time
 // v1.1.2: Added dynamic unit of measurement for distance sensor
 // v1.1.2: Activity icon now follows entity's icon attribute with fallback to predefined mapping
 // v1.1.2: Fixed WiFi detection for Android (case-insensitive check for "wifi", "Wi-Fi", etc.)
 
-console.log("Person Tracker Card v1.1.2 Multilanguage loading...");
+console.log("Person Tracker Card v1.2.0 Multilanguage loading...");
 
 const LitElement = Object.getPrototypeOf(
   customElements.get("ha-panel-lovelace") || customElements.get("hui-view")
@@ -182,6 +183,7 @@ class PersonTrackerCard extends LitElement {
       config: { attribute: false },
       _batteryLevel: { state: true },
       _batteryIcon: { state: true },
+      _batteryCharging: { state: true },
       _activity: { state: true },
       _activityIcon: { state: true },
       _connectionType: { state: true },
@@ -189,7 +191,8 @@ class PersonTrackerCard extends LitElement {
       _distanceUnit: { state: true },
       _travelTime: { state: true },
       _watchBatteryLevel: { state: true },
-      _watchBatteryIcon: { state: true }
+      _watchBatteryIcon: { state: true },
+      _watchBatteryCharging: { state: true }
     };
   }
 
@@ -197,6 +200,7 @@ class PersonTrackerCard extends LitElement {
     super();
     this._batteryLevel = 0;
     this._batteryIcon = 'mdi:battery';
+    this._batteryCharging = false;
     this._activity = 'unknown';
     this._activityIcon = '';
     this._connectionType = 'unknown';
@@ -204,6 +208,7 @@ class PersonTrackerCard extends LitElement {
     this._distanceUnit = 'km';
     this._watchBatteryLevel = 0;
     this._watchBatteryIcon = 'mdi:battery';
+    this._watchBatteryCharging = false;
     this._travelTime = 0;
     this._localize = null;
   }
@@ -278,6 +283,7 @@ class PersonTrackerCard extends LitElement {
       // Layout
       layout: 'classic',
       compact_width: 300,
+      modern_width: 300,
       // Display
       show_entity_picture: true,
       show_person_name: true,
@@ -313,6 +319,13 @@ class PersonTrackerCard extends LitElement {
       distance_font_size: '12px',
       travel_font_size: '12px',
       connection_font_size: '12px',
+      // Modern layout options
+      modern_picture_size: 40,
+      modern_show_battery_ring: true,
+      modern_show_travel_ring: true,
+      modern_travel_max_time: 60,
+      modern_name_font_size: '14px',
+      modern_state_font_size: '12px',
       ...config
     };
   }
@@ -370,9 +383,15 @@ class PersonTrackerCard extends LitElement {
 
     if (this.config.show_battery) {
       entities.push(this.config.battery_sensor || `sensor.phone_${entityBase}_battery_level`);
+      if (this.config.battery_state_sensor) {
+        entities.push(this.config.battery_state_sensor);
+      }
     }
     if (this.config.show_watch_battery) {
       entities.push(this.config.watch_battery_sensor || `sensor.watch_${entityBase}_battery_level`);
+      if (this.config.watch_battery_state_sensor) {
+        entities.push(this.config.watch_battery_state_sensor);
+      }
     }
     if (this.config.show_activity) {
       entities.push(this.config.activity_sensor || `sensor.phone_${entityBase}_activity`);
@@ -401,7 +420,17 @@ class PersonTrackerCard extends LitElement {
         this._batteryLevel = parseFloat(batteryEntity.state) || 0;
         this._batteryIcon = batteryEntity.attributes?.icon || 'mdi:battery';
       }
+      
+      // Battery charging state
+      if (this.config.battery_state_sensor) {
+        const batteryStateEntity = this.hass.states[this.config.battery_state_sensor];
+        if (batteryStateEntity) {
+          const state = batteryStateEntity.state.toLowerCase();
+          this._batteryCharging = state === 'charging' || state === 'in carica' || state === 'full';
+        }
+      }
     }
+    
     // Watch Battery
     if (this.config.show_watch_battery) {
       const watchBatteryEntityId = this.config.watch_battery_sensor || `sensor.watch_${entityBase}_battery_level`;
@@ -410,14 +439,30 @@ class PersonTrackerCard extends LitElement {
         this._watchBatteryLevel = parseFloat(watchBatteryEntity.state) || 0;
         this._watchBatteryIcon = watchBatteryEntity.attributes?.icon || 'mdi:battery';
       }
+      
+      // Watch Battery charging state
+      if (this.config.watch_battery_state_sensor) {
+        const watchBatteryStateEntity = this.hass.states[this.config.watch_battery_state_sensor];
+        if (watchBatteryStateEntity) {
+          const state = watchBatteryStateEntity.state.toLowerCase();
+          this._watchBatteryCharging = state === 'charging' || state === 'in carica' || state === 'full';
+        }
+      }
     }
+    
     // Activity
     if (this.config.show_activity) {
       const activityEntityId = this.config.activity_sensor || `sensor.phone_${entityBase}_activity`;
       const activityEntity = this.hass.states[activityEntityId];
       if (activityEntity) {
         this._activity = activityEntity.state;
-        this._activityIcon = this._getActivityIcon(); 
+        // Legge l'icona dall'attributo icon dell'entità, se non presente usa il mapping hardcoded
+        if (activityEntity.attributes?.icon) {
+          this._activityIcon = activityEntity.attributes.icon;
+        } else {
+          // Fallback alle icone predefinite
+          this._activityIcon = this._getActivityIcon();
+        }
       }
     }
 
@@ -452,28 +497,32 @@ class PersonTrackerCard extends LitElement {
   }
 
   _getActivityIcon() {
+    const activity = this._activity?.toLowerCase() || '';
     const icons = {
-      'Walking': 'mdi:walk',
-      'Running': 'mdi:run',
-      'Automotive': 'mdi:car',
-      'Stationary': 'mdi:human',
-      'Cycling': 'mdi:bike',
-      'Still': 'mdi:human-handsdown',
-      'Unknown': 'mdi:help',
-      'unknown': 'mdi:progress-question',
-      'in_vehicle': 'mdi:car',
-      'on_bicycle': 'mdi:bike',
-      'on_foot': 'mdi:human',
-      'still': 'mdi:human-handsdown',
-      'tilting': 'mdi:hiking',
       'walking': 'mdi:walk',
-      'running': 'mdi:run'
+      'running': 'mdi:run',
+      'automotive': 'mdi:car',
+      'stationary': 'mdi:human',
+      'cycling': 'mdi:bike',
+      'still': 'mdi:human-handsdown',
+      'unknown': 'mdi:help-circle-outline',
+      'tilting': 'mdi:phone-rotate-landscape',
+      'on_foot': 'mdi:walk',
+      'on_bicycle': 'mdi:bike',
+      'in_vehicle': 'mdi:car',
+      // Italiano
+      'a piedi': 'mdi:walk',
+      'in bicicletta': 'mdi:bike',
+      'in auto': 'mdi:car',
+      'fermo': 'mdi:human-handsdown',
+      'corsa': 'mdi:run'
     };
-    return icons[this._activity] || 'mdi:human-male';
+    return icons[activity] || 'mdi:human-male';
   }
 
   _getBatteryColor(level) {
     const batteryLevel = level !== undefined ? level : this._batteryLevel;
+    if (batteryLevel < 10) return '#e45649';
     if (batteryLevel < 20) return '#e45649';
     if (batteryLevel < 30) return '#ff9800';
     if (batteryLevel < 50) return '#ffa229';
@@ -487,8 +536,6 @@ class PersonTrackerCard extends LitElement {
     const normalized = connectionType.toLowerCase().replace(/[-_\s]/g, '');
     return normalized === 'wifi';
   }
-
-
 
   _getCurrentStateConfig() {
     if (!this.config.state || !this.hass) return undefined;
@@ -541,6 +588,24 @@ class PersonTrackerCard extends LitElement {
     return positions[position];
   }
 
+  // Get border color based on person state
+  _getStateBorderColor(state) {
+    if (!state) return 'gray';
+    
+    const lowerState = state.toLowerCase();
+    if (lowerState === 'home') return '#50A14F';
+    if (lowerState === 'not_home') return '#e45649';
+    return '#ff9800'; // orange for other locations (zones)
+  }
+
+  // Get travel time color based on value
+  _getTravelTimeColor(travelTime) {
+    const maxTime = this.config.modern_travel_max_time || 60;
+    if (travelTime >= maxTime * 0.67) return '#e45649'; // red
+    if (travelTime >= maxTime * 0.33) return '#ffa229'; // yellow/orange
+    return '#50A14F'; // green
+  }
+
   render() {
     if (!this.hass || !this.config) {
       return html``;
@@ -561,6 +626,8 @@ class PersonTrackerCard extends LitElement {
     // Scegli il layout in base alla configurazione
     if (this.config.layout === 'compact') {
       return this._renderCompactLayout();
+    } else if (this.config.layout === 'modern') {
+      return this._renderModernLayout();
     } else {
       return this._renderClassicLayout();
     }
@@ -568,7 +635,6 @@ class PersonTrackerCard extends LitElement {
 
   _renderClassicLayout() {
     const entity = this.hass.states[this.config.entity];
-
 
 
     const stateConfig = this._getCurrentStateConfig();
@@ -660,7 +726,7 @@ class PersonTrackerCard extends LitElement {
               </div>
             ` : ''}
 
-            ${this.config.show_activity && this._activity && this._activity !== 'unknown' && activityIcon ? html`
+            ${this.config.show_activity ? html`
               <div class="custom-field activity"
                    style="font-size: ${this.config.activity_font_size};
                           ${Object.entries(activityPos).map(([k, v]) => `${k}: ${v}`).join('; ')}">
@@ -716,9 +782,9 @@ class PersonTrackerCard extends LitElement {
     // Activity icon e color
     const activityIcon = this._activityIcon;
     let activityColor = 'var(--secondary-text-color)';
-    if (this._activity === 'Stationary' || this._activity === 'still' || this._activity === 'Still' || this._activity === 'on_foot') activityColor = 'green';
-    else if (this._activity === 'Walking' || this._activity === 'Running' || this._activity === 'tilting' || this._activity === 'walking' || this._activity === 'running') activityColor = 'orange';
-    else if (this._activity === 'Automotive' || this._activity === 'Cycling' || this._activity === 'on_bicycle' || this._activity === 'in_vehicle') activityColor = 'blue';
+    if (this._activity === 'Stationary') activityColor = 'green';
+    else if (this._activity === 'Walking' || this._activity === 'Running') activityColor = 'orange';
+    else if (this._activity === 'Automotive') activityColor = 'blue';
 
     // Connection
     const connectionIcon = this._isWifiConnection(this._connectionType) ? 'mdi:wifi' : 'mdi:signal';
@@ -750,7 +816,7 @@ class PersonTrackerCard extends LitElement {
           </div>
 
           <div class="compact-icons">
-            ${this.config.show_activity && activityIcon ? html`
+            ${this.config.show_activity ? html`
               <div class="compact-icon-badge">
                 <ha-icon icon="${activityIcon}" style="--mdc-icon-size: 16px; color: ${activityColor};"></ha-icon>
               </div>
@@ -792,6 +858,168 @@ class PersonTrackerCard extends LitElement {
                 <span style="font-size: 8px; font-weight: bold; margin-top: -2px;">
                   ${Math.round(this._travelTime)}m
                 </span>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      </ha-card>
+    `;
+  }
+
+  // NEW: Modern Layout with circular progress indicators
+  _renderModernLayout() {
+    const entity = this.hass.states[this.config.entity];
+    const stateConfig = this._getCurrentStateConfig();
+
+    // Person name
+    const personName = this.config.name || entity.attributes?.friendly_name || 'Person';
+
+    // State name (location)
+    const displayLocation = stateConfig?.name || this._translateState(entity.state);
+
+    const entityPicture = stateConfig?.entity_picture || this.config.entity_picture || entity.attributes?.entity_picture;
+    const stateStyles = stateConfig?.styles?.name || {};
+
+    // Border color based on state
+    const borderColor = stateStyles.color || this._getStateBorderColor(entity.state);
+
+    // Battery colors and values
+    const batteryColor = this._getBatteryColor(this._batteryLevel);
+    const batteryLevel = Math.round(this._batteryLevel);
+
+    // Watch Battery
+    const watchBatteryColor = this._getBatteryColor(this._watchBatteryLevel);
+    const watchBatteryLevel = Math.round(this._watchBatteryLevel);
+
+    // Travel time
+    const travelTime = Math.round(this._travelTime);
+    const maxTravelTime = this.config.modern_travel_max_time || 60;
+    const travelPercentage = travelTime > 0 ? Math.min((travelTime / maxTravelTime) * 100, 100) : 0;
+    const travelColor = this._getTravelTimeColor(travelTime);
+
+    // Distance
+    const distance = Math.round(this._distanceFromHome);
+    const maxDistance = this.config.modern_distance_max || 100;
+    const distancePercentage = distance > 0 ? Math.min((distance / maxDistance) * 100, 100) : 0;
+
+    // Activity
+    const activityIcon = this._activityIcon;
+    const activity = this._activity;
+
+    // Connection
+    const connectionIcon = this._isWifiConnection(this._connectionType) ? 'mdi:wifi' : 'mdi:signal';
+    const connectionColor = this._isWifiConnection(this._connectionType) ? '#4CAF50' : '#FF9800';
+
+    // Picture size
+    const pictureSize = this.config.modern_picture_size || 40;
+
+    // Width
+    const maxWidth = this.config.modern_width || 300;
+
+    return html`
+      <ha-card style="background: ${this.config.card_background}; border-radius: ${this.config.card_border_radius}; padding: 10px 12px;">
+        <div class="modern-container">
+          <!-- Picture with state-colored border -->
+          ${this.config.show_entity_picture && entityPicture ? html`
+            <div class="modern-picture" style="
+              border: 3px solid ${borderColor};
+              border-radius: 50%;
+              width: ${pictureSize}px;
+              height: ${pictureSize}px;
+              overflow: hidden;
+              flex-shrink: 0;
+            ">
+              <img 
+                src="${entityPicture}" 
+                alt="${personName}"
+                style="width: 100%; height: 100%; object-fit: cover;"
+              />
+            </div>
+          ` : ''}
+
+          <!-- Center: Name and State -->
+          <div class="modern-info">
+            ${this.config.show_person_name ? html`
+              <div style="font-size: ${this.config.modern_name_font_size || '14px'}; font-weight: bold; text-transform: uppercase; margin: 0; padding: 0;">
+                ${personName}
+              </div>
+            ` : ''}
+            ${this.config.show_name ? html`
+              <div style="font-size: ${this.config.modern_state_font_size || '12px'}; color: ${stateStyles.color || 'var(--secondary-text-color)'}; margin: 0; padding: 0;">
+                ${displayLocation}
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- Right: Circular indicators -->
+          <div class="modern-rings">
+            <!-- Battery -->
+            ${this.config.show_battery ? html`
+              <div class="ring-container">
+                <svg viewBox="0 0 36 36" class="ring-svg">
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#333" stroke-width="3"/>
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="${batteryColor}" stroke-width="3" stroke-dasharray="${batteryLevel}, 100" stroke-linecap="round"/>
+                </svg>
+                <div class="ring-text">
+                  <span class="ring-value">${batteryLevel}</span>
+                  <span class="ring-unit">%</span>
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Watch Battery -->
+            ${this.config.show_watch_battery ? html`
+              <div class="ring-container">
+                <svg viewBox="0 0 36 36" class="ring-svg">
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#333" stroke-width="3"/>
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="${watchBatteryColor}" stroke-width="3" stroke-dasharray="${watchBatteryLevel}, 100" stroke-linecap="round"/>
+                </svg>
+                <div class="ring-text">
+                  <span class="ring-value">${watchBatteryLevel}</span>
+                  <span class="ring-unit">⌚</span>
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Activity -->
+            ${this.config.show_activity ? html`
+              <div class="ring-container ring-icon-only">
+                <ha-icon icon="${activityIcon}"></ha-icon>
+              </div>
+            ` : ''}
+
+            <!-- Connection -->
+            ${this.config.show_connection ? html`
+              <div class="ring-container ring-icon-only">
+                <ha-icon icon="${connectionIcon}" style="color: ${connectionColor};"></ha-icon>
+              </div>
+            ` : ''}
+
+            <!-- Distance -->
+            ${this.config.show_distance ? html`
+              <div class="ring-container">
+                <svg viewBox="0 0 36 36" class="ring-svg">
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#333" stroke-width="3"/>
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#4A9EFF" stroke-width="3" stroke-dasharray="${distancePercentage}, 100" stroke-linecap="round"/>
+                </svg>
+                <div class="ring-text">
+                  <span class="ring-value">${distance}</span>
+                  <span class="ring-unit">${this._distanceUnit}</span>
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Travel time -->
+            ${this.config.show_travel_time ? html`
+              <div class="ring-container">
+                <svg viewBox="0 0 36 36" class="ring-svg">
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#333" stroke-width="3"/>
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="${travelColor}" stroke-width="3" stroke-dasharray="${travelPercentage}, 100" stroke-linecap="round"/>
+                </svg>
+                <div class="ring-text">
+                  <span class="ring-value">${travelTime}</span>
+                  <span class="ring-unit">min</span>
+                </div>
               </div>
             ` : ''}
           </div>
@@ -1055,6 +1283,104 @@ class PersonTrackerCard extends LitElement {
         justify-content: center;
       }
 
+      /* Modern Layout Styles */
+      .modern-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+      }
+
+      .modern-picture {
+        flex-shrink: 0;
+      }
+
+      .modern-info {
+        flex: 1 1 auto;
+        min-width: 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        overflow: hidden;
+      }
+
+      .modern-info div {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .modern-rings {
+        display: flex;
+        flex-direction: row;
+        gap: 6px;
+        flex-shrink: 0;
+        margin-left: auto;
+      }
+
+      .ring-container {
+        position: relative;
+        width: 38px;
+        height: 38px;
+        flex-shrink: 0;
+      }
+
+      .ring-svg {
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+      }
+
+      .ring-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+      }
+
+      .ring-value {
+        font-size: 11px;
+        font-weight: bold;
+        color: #fff;
+      }
+
+      .ring-unit {
+        font-size: 7px;
+        color: #aaa;
+        margin-top: 1px;
+      }
+
+      .ring-icon-only {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+      }
+
+      .ring-icon-only ha-icon {
+        --mdc-icon-size: 22px;
+      }
+
+      .circular-chart {
+        display: block;
+      }
+
+      .circle-bg {
+        stroke-linecap: round;
+      }
+
+      .circle {
+        stroke-linecap: round;
+        transition: stroke-dasharray 0.3s ease;
+      }
+
       @media (max-width: 400px) {
         .custom-field {
           font-size: 11px !important;
@@ -1072,7 +1398,7 @@ class PersonTrackerCard extends LitElement {
 if (!customElements.get('person-tracker-card')) {
   customElements.define('person-tracker-card', PersonTrackerCard);
   console.info(
-    '%c PERSON-TRACKER-CARD %c v1.1.2 %c! ',
+    '%c PERSON-TRACKER-CARD %c v1.2.0 %c! ',
     'background-color: #7DDA9F; color: black; font-weight: bold;',
     'background-color: #93ADCB; color: white; font-weight: bold;',
     'background-color: #FFD700; color: black; font-weight: bold;'

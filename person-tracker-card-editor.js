@@ -1,5 +1,6 @@
 // Person Tracker Card Editor - Multilanguage Version
 // Languages: Italian (default), English, French, German
+// v1.2.0: Added Modern layout options
 
 const LitElement = Object.getPrototypeOf(
   customElements.get("ha-panel-lovelace") || customElements.get("hui-view")
@@ -66,6 +67,7 @@ class EditorLocalizationHelper {
         'editor.positions': 'Posizioni',
         'editor.advanced': 'Avanzate',
         'editor.compact_width': 'Larghezza compatta (px)',
+        'editor.modern_width': 'Larghezza modern (px)',
         'editor.custom_image_url': 'URL immagine personalizzata',
         'editor.aspect_ratio': 'Proporzioni',
         'editor.state_value': 'Valore stato',
@@ -77,6 +79,14 @@ class EditorLocalizationHelper {
         'editor.card_background': 'Sfondo card',
         'editor.border_radius': 'Raggio bordo',
         'editor.image_size': 'Dimensione immagine (%)',
+        'editor.modern_picture_size': 'Dimensione immagine (px)',
+        'editor.modern_name_font_size': 'Dimensione font nome',
+        'editor.modern_state_font_size': 'Dimensione font stato',
+        'editor.modern_show_battery_ring': 'Mostra anello batteria',
+        'editor.modern_show_travel_ring': 'Mostra anello tempo viaggio',
+        'editor.modern_travel_max_time': 'Tempo viaggio massimo (min)',
+        'editor.battery_state_sensor': 'Sensore stato batteria (carica)',
+        'editor.watch_battery_state_sensor': 'Sensore stato batteria smartwatch',
         'section.automatic_sensors': 'Sensori Automatici',
         'section.sensors_description': 'I sensori vengono rilevati automaticamente in base all\'entità persona selezionata. Pattern predefinito: sensor.phone_',
         'section.element_positions': 'Posizioni Elementi',
@@ -84,6 +94,7 @@ class EditorLocalizationHelper {
         'section.custom_states': 'Stati Personalizzati',
         'section.states_description': 'Configura come vengono visualizzati i diversi stati della persona',
         'section.card_style': 'Personalizzazione Stile Card',
+        'section.modern_options': 'Opzioni Layout Modern',
         'position.battery': 'Posizione batteria',
         'position.watch_battery': 'Posizione batteria smartwatch',
         'position.activity': 'Posizione attività',
@@ -138,6 +149,7 @@ class EditorLocalizationHelper {
         'editor.positions': 'Positions',
         'editor.advanced': 'Advanced',
         'editor.compact_width': 'Compact width (px)',
+        'editor.modern_width': 'Modern width (px)',
         'editor.custom_image_url': 'Custom image URL',
         'editor.aspect_ratio': 'Aspect ratio',
         'editor.state_value': 'State value',
@@ -149,6 +161,14 @@ class EditorLocalizationHelper {
         'editor.card_background': 'Card background',
         'editor.border_radius': 'Border radius',
         'editor.image_size': 'Image size (%)',
+        'editor.modern_picture_size': 'Picture size (px)',
+        'editor.modern_name_font_size': 'Name font size',
+        'editor.modern_state_font_size': 'State font size',
+        'editor.modern_show_battery_ring': 'Show battery ring',
+        'editor.modern_show_travel_ring': 'Show travel time ring',
+        'editor.modern_travel_max_time': 'Max travel time (min)',
+        'editor.battery_state_sensor': 'Battery state sensor (charging)',
+        'editor.watch_battery_state_sensor': 'Watch battery state sensor',
         'section.automatic_sensors': 'Automatic Sensors',
         'section.sensors_description': 'Sensors are detected automatically based on the selected person entity. Default pattern: sensor.phone_',
         'section.element_positions': 'Element Positions',
@@ -156,6 +176,7 @@ class EditorLocalizationHelper {
         'section.custom_states': 'Custom States',
         'section.states_description': 'Configure how the different person states are displayed',
         'section.card_style': 'Card Style Customization',
+        'section.modern_options': 'Modern Layout Options',
         'position.battery': 'Battery position',
         'position.watch_battery': 'Watch battery position',
         'position.activity': 'Activity position',
@@ -210,6 +231,7 @@ class EditorLocalizationHelper {
         'editor.advanced': 'Avancé',
         'editor.show_last_updated': 'Afficher dernière mise à jour',
         'editor.compact_width': 'Largeur compacte (px)',
+        'editor.modern_width': 'Largeur moderne (px)',
         'editor.custom_image_url': 'URL image personnalisée',
         'editor.aspect_ratio': 'Ratio d\'aspect',
         'editor.state_value': 'Valeur état',
@@ -221,6 +243,14 @@ class EditorLocalizationHelper {
         'editor.card_background': 'Fond carte',
         'editor.border_radius': 'Rayon bordure',
         'editor.image_size': 'Taille image (%)',
+        'editor.modern_picture_size': 'Taille image (px)',
+        'editor.modern_name_font_size': 'Taille police nom',
+        'editor.modern_state_font_size': 'Taille police état',
+        'editor.modern_show_battery_ring': 'Afficher anneau batterie',
+        'editor.modern_show_travel_ring': 'Afficher anneau temps trajet',
+        'editor.modern_travel_max_time': 'Temps trajet max (min)',
+        'editor.battery_state_sensor': 'Capteur état batterie (charge)',
+        'editor.watch_battery_state_sensor': 'Capteur état batterie montre',
         'section.automatic_sensors': 'Capteurs Automatiques',
         'section.sensors_description': 'Les capteurs sont détectés automatiquement selon l\'entité personne sélectionnée. Modèle par défaut: sensor.phone_',
         'section.element_positions': 'Positions Éléments',
@@ -228,6 +258,7 @@ class EditorLocalizationHelper {
         'section.custom_states': 'États Personnalisés',
         'section.states_description': 'Configurer comment les différents états de la personne sont affichés',
         'section.card_style': 'Personnalisation Style Carte',
+        'section.modern_options': 'Options Layout Moderne',
         'position.battery': 'Position batterie',
         'position.watch_battery': 'Position batterie montre',
         'position.activity': 'Position activité',
@@ -282,6 +313,7 @@ class EditorLocalizationHelper {
         'editor.advanced': 'Erweitert',
         'editor.show_last_updated': 'Letzte Aktualisierung anzeigen',
         'editor.compact_width': 'Kompakte Breite (px)',
+        'editor.modern_width': 'Moderne Breite (px)',
         'editor.custom_image_url': 'Benutzerdefinierte Bild-URL',
         'editor.aspect_ratio': 'Seitenverhältnis',
         'editor.state_value': 'Statuswert',
@@ -293,6 +325,14 @@ class EditorLocalizationHelper {
         'editor.card_background': 'Kartenhintergrund',
         'editor.border_radius': 'Randradius',
         'editor.image_size': 'Bildgröße (%)',
+        'editor.modern_picture_size': 'Bildgröße (px)',
+        'editor.modern_name_font_size': 'Schriftgröße Name',
+        'editor.modern_state_font_size': 'Schriftgröße Status',
+        'editor.modern_show_battery_ring': 'Batteriering anzeigen',
+        'editor.modern_show_travel_ring': 'Reisezeitring anzeigen',
+        'editor.modern_travel_max_time': 'Max Reisezeit (min)',
+        'editor.battery_state_sensor': 'Batteriestatussensor (Laden)',
+        'editor.watch_battery_state_sensor': 'Uhr-Batteriestatussensor',
         'section.automatic_sensors': 'Automatische Sensoren',
         'section.sensors_description': 'Sensoren werden automatisch basierend auf der ausgewählten Personenentität erkannt. Standardmuster: sensor.phone_',
         'section.element_positions': 'Elementpositionen',
@@ -300,6 +340,7 @@ class EditorLocalizationHelper {
         'section.custom_states': 'Benutzerdefinierte Zustände',
         'section.states_description': 'Konfigurieren Sie, wie die verschiedenen Personenzustände angezeigt werden',
         'section.card_style': 'Karten-Stil Anpassung',
+        'section.modern_options': 'Moderne Layout-Optionen',
         'position.battery': 'Batterieposition',
         'position.watch_battery': 'Uhr-Batterieposition',
         'position.activity': 'Aktivitätsposition',
@@ -371,6 +412,7 @@ class PersonTrackerCardEditor extends LitElement {
     this._config = {
       layout: 'classic',
       compact_width: 300,
+      modern_width: 300,
       show_entity_picture: true,
       show_person_name: true,
       show_name: true,
@@ -395,6 +437,13 @@ class PersonTrackerCardEditor extends LitElement {
       distance_font_size: '12px',
       travel_font_size: '12px',
       connection_font_size: '12px',
+      // Modern layout defaults
+      modern_picture_size: 40,
+      modern_name_font_size: '14px',
+      modern_state_font_size: '12px',
+      modern_show_battery_ring: true,
+      modern_show_travel_ring: true,
+      modern_travel_max_time: 60,
       ...config
     };
 
@@ -667,7 +716,7 @@ class PersonTrackerCardEditor extends LitElement {
             <ha-icon icon="mdi:leak"></ha-icon>
             ${this._t('tabs.sensors')}
           </button>
-          ${this._config.layout !== 'compact' ? html`
+          ${this._config.layout === 'classic' ? html`
             <button
               class="tab ${this._selectedTab === 'position' ? 'active' : ''}"
               @click="${() => this._selectedTab = 'position'}">
@@ -724,6 +773,7 @@ class PersonTrackerCardEditor extends LitElement {
           @closed=${(e) => this._handleLayoutChange(e)}>
           <mwc-list-item value="classic">Classic</mwc-list-item>
           <mwc-list-item value="compact">Compact</mwc-list-item>
+          <mwc-list-item value="modern">Modern</mwc-list-item>
         </ha-select>
 
         ${this._config.layout === 'compact' ? html`
@@ -734,6 +784,18 @@ class PersonTrackerCardEditor extends LitElement {
             max="500"
             .value=${this._config.compact_width || '300'}
             @input=${(e) => this._valueChanged(e, 'compact_width')}
+            helper-text="Maximum width in pixels (default: 300px)">
+          </ha-textfield>
+        ` : ''}
+
+        ${this._config.layout === 'modern' ? html`
+          <ha-textfield
+            label="${this._t('editor.modern_width')}"
+            type="number"
+            min="200"
+            max="500"
+            .value=${this._config.modern_width || '300'}
+            @input=${(e) => this._valueChanged(e, 'modern_width')}
             helper-text="Maximum width in pixels (default: 300px)">
           </ha-textfield>
         ` : ''}
@@ -751,7 +813,7 @@ class PersonTrackerCardEditor extends LitElement {
           helper-text="E.g.: /local/photos/mario.jpg">
         </ha-textfield>
 
-        ${this._config.layout !== 'compact' ? html`
+        ${this._config.layout === 'classic' ? html`
           <ha-textfield
             label="${this._t('editor.aspect_ratio')}"
             .value=${this._config.aspect_ratio || '1/0.7'}
@@ -788,13 +850,15 @@ class PersonTrackerCardEditor extends LitElement {
           </ha-switch>
         </div>
 
-        <div class="config-row">
-          <span class="config-label">${this._t('editor.show_last_updated')}</span>
-          <ha-switch
-            .checked=${this._config.show_last_changed !== false}
-            @change=${(e) => this._valueChanged(e, 'show_last_changed')}>
-          </ha-switch>
-        </div>
+        ${this._config.layout !== 'modern' ? html`
+          <div class="config-row">
+            <span class="config-label">${this._t('editor.show_last_updated')}</span>
+            <ha-switch
+              .checked=${this._config.show_last_changed !== false}
+              @change=${(e) => this._valueChanged(e, 'show_last_changed')}>
+            </ha-switch>
+          </div>
+        ` : ''}
       </div>
     `;
   }
@@ -1072,7 +1136,7 @@ class PersonTrackerCardEditor extends LitElement {
       <div class="section">
         <div class="section-title">${this._t('section.card_style')}</div>
 
-        ${this._config.layout !== 'compact' ? html`
+        ${this._config.layout === 'classic' ? html`
           <div class="two-column">
             <ha-textfield
               label="${this._t('editor.name_font_size')}"
@@ -1108,7 +1172,7 @@ class PersonTrackerCardEditor extends LitElement {
           @input=${(e) => this._valueChanged(e, 'card_border_radius')}>
         </ha-textfield>
 
-        ${this._config.layout !== 'compact' ? html`
+        ${this._config.layout === 'classic' ? html`
           <ha-textfield
             label="${this._t('editor.image_size')}"
             type="number"
@@ -1120,7 +1184,47 @@ class PersonTrackerCardEditor extends LitElement {
         ` : ''}
       </div>
 
+      ${this._config.layout === 'modern' ? html`
+        <div class="section">
+          <div class="section-title">${this._t('section.modern_options')}</div>
+          
+          <ha-textfield
+            label="${this._t('editor.modern_picture_size')}"
+            type="number"
+            min="30"
+            max="80"
+            .value=${this._config.modern_picture_size || '40'}
+            @input=${(e) => this._valueChanged(e, 'modern_picture_size')}
+            helper-text="Default: 40px">
+          </ha-textfield>
 
+          <div class="two-column">
+            <ha-textfield
+              label="${this._t('editor.modern_name_font_size')}"
+              .value=${this._config.modern_name_font_size || '14px'}
+              @input=${(e) => this._valueChanged(e, 'modern_name_font_size')}
+              helper-text="Default: 14px">
+            </ha-textfield>
+
+            <ha-textfield
+              label="${this._t('editor.modern_state_font_size')}"
+              .value=${this._config.modern_state_font_size || '12px'}
+              @input=${(e) => this._valueChanged(e, 'modern_state_font_size')}
+              helper-text="Default: 12px">
+            </ha-textfield>
+          </div>
+
+          <ha-textfield
+            label="${this._t('editor.modern_travel_max_time')}"
+            type="number"
+            min="10"
+            max="180"
+            .value=${this._config.modern_travel_max_time || '60'}
+            @input=${(e) => this._valueChanged(e, 'modern_travel_max_time')}
+            helper-text="Default: 60 min (used for progress ring calculation)">
+          </ha-textfield>
+        </div>
+      ` : ''}
     `;
   }
 
@@ -1197,7 +1301,7 @@ class PersonTrackerCardEditor extends LitElement {
     const target = ev.target;
     const value = target.value;
 
-    if (!value || (value !== 'classic' && value !== 'compact')) {
+    if (!value || (value !== 'classic' && value !== 'compact' && value !== 'modern')) {
       console.warn('Invalid layout value:', value);
       return;
     }
@@ -1220,7 +1324,7 @@ class PersonTrackerCardEditor extends LitElement {
     const validTriggerValues = ['all', 'entity', 'custom'];
 
     // Allowed values for layout
-    const validLayoutValues = ['classic', 'compact'];
+    const validLayoutValues = ['classic', 'compact', 'modern'];
 
     // Allowed values for positions
     const validPositions = [
