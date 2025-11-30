@@ -1,6 +1,6 @@
 // Person Tracker Card Editor - Multilanguage Version
 // Languages: Italian (default), English, French, German
-// v1.2.0: Added Modern layout options
+// v1.2.2: Bug fix, battery state, animation,fixed light theme
 
 const LitElement = Object.getPrototypeOf(
   customElements.get("ha-panel-lovelace") || customElements.get("hui-view")
@@ -36,13 +36,13 @@ class EditorLocalizationHelper {
 
     this.translations = {
       'it': {
-        'editor.entity': 'Entità',
+        'editor.entity': 'EntitÃ ',
         'editor.name': 'Nome (opzionale)',
         'editor.show_last_changed': 'Mostra ultimo aggiornamento',
         'editor.show_last_updated': 'Mostra ultimo aggiornamento',
         'editor.show_distance': 'Mostra distanza',
         'editor.show_battery': 'Mostra batteria',
-        'editor.show_speed': 'Mostra velocità',
+        'editor.show_speed': 'Mostra velocitÃ ',
         'editor.show_direction': 'Mostra direzione',
         'editor.show_accuracy': 'Mostra precisione',
         'editor.show_gps_accuracy': 'Mostra precisione GPS',
@@ -51,7 +51,7 @@ class EditorLocalizationHelper {
         'editor.show_entity_picture': 'Mostra immagine',
         'editor.show_name': 'Mostra stato',
         'editor.show_person_name': 'Mostra nome persona',
-        'editor.show_activity': 'Mostra attività',
+        'editor.show_activity': 'Mostra attivitÃ ',
         'editor.show_watch_battery': 'Mostra batteria smartwatch',
         'editor.show_travel_time': 'Mostra tempo di viaggio',
         'editor.show_connection': 'Mostra connessione',
@@ -85,28 +85,38 @@ class EditorLocalizationHelper {
         'editor.modern_show_battery_ring': 'Mostra anello batteria',
         'editor.modern_show_travel_ring': 'Mostra anello tempo viaggio',
         'editor.modern_travel_max_time': 'Tempo viaggio massimo (min)',
-        'editor.battery_state_sensor': 'Sensore stato batteria (carica)',
-        'editor.watch_battery_state_sensor': 'Sensore stato batteria smartwatch',
+        'editor.modern_ring_size': 'Dimensione cerchi (px)',
+        'editor.classic_icon_size': 'Dimensione icone (px)',
+        'editor.compact_icon_size': 'Dimensione icone (px)',
+        'editor.battery_font_size': 'Dimensione font batteria',
+        'editor.activity_font_size': 'Dimensione font attivitÃ ',
+        'editor.battery_state_sensor': 'Sensore stato carica telefono',
+        'editor.battery_charging_value': 'Valore stato in carica (opzionale)',
+        'editor.watch_battery_state_sensor': 'Sensore stato carica smartwatch',
+        'editor.watch_battery_charging_value': 'Valore stato in carica watch (opzionale)',
+        'editor.charging_helper': 'Lascia vuoto per rilevamento automatico (charging, full, on, true...)',
         'section.automatic_sensors': 'Sensori Automatici',
-        'section.sensors_description': 'I sensori vengono rilevati automaticamente in base all\'entità persona selezionata. Pattern predefinito: sensor.phone_',
+        'section.sensors_description': 'I sensori vengono rilevati automaticamente in base all\'entitÃ  persona selezionata. Pattern predefinito: sensor.phone_',
         'section.element_positions': 'Posizioni Elementi',
         'section.positions_description': 'Configura la posizione di ogni elemento sulla card. Disponibile solo nel layout Classic.',
         'section.custom_states': 'Stati Personalizzati',
         'section.states_description': 'Configura come vengono visualizzati i diversi stati della persona',
         'section.card_style': 'Personalizzazione Stile Card',
         'section.modern_options': 'Opzioni Layout Modern',
+        'section.classic_options': 'Opzioni Layout Classic',
+        'section.compact_options': 'Opzioni Layout Compact',
         'position.battery': 'Posizione batteria',
         'position.watch_battery': 'Posizione batteria smartwatch',
-        'position.activity': 'Posizione attività',
+        'position.activity': 'Posizione attivitÃ ',
         'position.distance': 'Posizione distanza',
         'position.travel': 'Posizione tempo viaggio',
         'position.connection': 'Posizione connessione',
         'state.name_color': 'Colore nome',
         'state.add_state': 'Aggiungi Stato',
-        'default_state.home': '🏡 Casa',
-        'default_state.away': '🏃‍♂️ Fuori Casa',
-        'default_state.office': '🏢 Ufficio',
-        'default_state.unknown': '❓ Sconosciuto',
+        'default_state.home': 'ðŸ¡ Casa',
+        'default_state.away': 'ðŸƒâ€â™‚ï¸ Fuori Casa',
+        'default_state.office': 'ðŸ¢ Ufficio',
+        'default_state.unknown': 'â“ Sconosciuto',
         'state.default_states': 'Stati Predefiniti',
         'state.add_default_states': 'Aggiungi Stati Predefiniti',
         'tabs.base': 'Base',
@@ -167,8 +177,16 @@ class EditorLocalizationHelper {
         'editor.modern_show_battery_ring': 'Show battery ring',
         'editor.modern_show_travel_ring': 'Show travel time ring',
         'editor.modern_travel_max_time': 'Max travel time (min)',
-        'editor.battery_state_sensor': 'Battery state sensor (charging)',
-        'editor.watch_battery_state_sensor': 'Watch battery state sensor',
+        'editor.modern_ring_size': 'Ring size (px)',
+        'editor.classic_icon_size': 'Icon size (px)',
+        'editor.compact_icon_size': 'Icon size (px)',
+        'editor.battery_font_size': 'Battery font size',
+        'editor.activity_font_size': 'Activity font size',
+        'editor.battery_state_sensor': 'Phone charging state sensor',
+        'editor.battery_charging_value': 'Charging state value (optional)',
+        'editor.watch_battery_state_sensor': 'Watch charging state sensor',
+        'editor.watch_battery_charging_value': 'Watch charging state value (optional)',
+        'editor.charging_helper': 'Leave empty for auto-detection (charging, full, on, true...)',
         'section.automatic_sensors': 'Automatic Sensors',
         'section.sensors_description': 'Sensors are detected automatically based on the selected person entity. Default pattern: sensor.phone_',
         'section.element_positions': 'Element Positions',
@@ -177,6 +195,8 @@ class EditorLocalizationHelper {
         'section.states_description': 'Configure how the different person states are displayed',
         'section.card_style': 'Card Style Customization',
         'section.modern_options': 'Modern Layout Options',
+        'section.classic_options': 'Classic Layout Options',
+        'section.compact_options': 'Compact Layout Options',
         'position.battery': 'Battery position',
         'position.watch_battery': 'Watch battery position',
         'position.activity': 'Activity position',
@@ -185,10 +205,10 @@ class EditorLocalizationHelper {
         'position.connection': 'Connection position',
         'state.name_color': 'Name color',
         'state.add_state': 'Add State',
-        'default_state.home': '🏡 Home',
-        'default_state.away': '🏃‍♂️ Away from Home',
-        'default_state.office': '🏢 Office',
-        'default_state.unknown': '❓ Unknown',
+        'default_state.home': 'ðŸ¡ Home',
+        'default_state.away': 'ðŸƒâ€â™‚ï¸ Away from Home',
+        'default_state.office': 'ðŸ¢ Office',
+        'default_state.unknown': 'â“ Unknown',
         'state.default_states': 'Default States',
         'state.add_default_states': 'Add Default States',
         'tabs.base': 'Base',
@@ -200,26 +220,26 @@ class EditorLocalizationHelper {
         'tabs.style': 'Style'
       },
       'fr': {
-        'editor.entity': 'Entité',
+        'editor.entity': 'EntitÃ©',
         'editor.name': 'Nom (optionnel)',
-        'editor.show_last_changed': 'Afficher dernière mise à jour',
+        'editor.show_last_changed': 'Afficher derniÃ¨re mise Ã  jour',
         'editor.show_distance': 'Afficher distance',
         'editor.show_battery': 'Afficher batterie',
         'editor.show_speed': 'Afficher vitesse',
         'editor.show_direction': 'Afficher direction',
-        'editor.show_accuracy': 'Afficher précision',
-        'editor.show_gps_accuracy': 'Afficher précision GPS',
+        'editor.show_accuracy': 'Afficher prÃ©cision',
+        'editor.show_gps_accuracy': 'Afficher prÃ©cision GPS',
         'editor.show_altitude': 'Afficher altitude',
         'editor.show_source': 'Afficher source',
         'editor.show_entity_picture': 'Afficher image',
-        'editor.show_name': 'Afficher l\'état',
+        'editor.show_name': 'Afficher l\'Ã©tat',
         'editor.show_person_name': 'Afficher nom de la personne',
-        'editor.show_activity': 'Afficher activité',
+        'editor.show_activity': 'Afficher activitÃ©',
         'editor.show_watch_battery': 'Afficher batterie montre',
         'editor.show_travel_time': 'Afficher temps de trajet',
         'editor.show_connection': 'Afficher connexion',
-        'editor.custom_icon': 'Icône personnalisée',
-        'editor.icon_color': "Couleur de l'icône",
+        'editor.custom_icon': 'IcÃ´ne personnalisÃ©e',
+        'editor.icon_color': "Couleur de l'icÃ´ne",
         'editor.background_color': 'Couleur de fond',
         'editor.text_color': 'Couleur du texte',
         'editor.required': 'Requis',
@@ -228,75 +248,85 @@ class EditorLocalizationHelper {
         'editor.appearance': 'Apparence',
         'editor.display_options': "Options d'affichage",
         'editor.positions': 'Positions',
-        'editor.advanced': 'Avancé',
-        'editor.show_last_updated': 'Afficher dernière mise à jour',
+        'editor.advanced': 'AvancÃ©',
+        'editor.show_last_updated': 'Afficher derniÃ¨re mise Ã  jour',
         'editor.compact_width': 'Largeur compacte (px)',
         'editor.modern_width': 'Largeur moderne (px)',
-        'editor.custom_image_url': 'URL image personnalisée',
+        'editor.custom_image_url': 'URL image personnalisÃ©e',
         'editor.aspect_ratio': 'Ratio d\'aspect',
-        'editor.state_value': 'Valeur état',
-        'editor.displayed_name': 'Nom affiché',
-        'editor.custom_image': 'Image personnalisée',
+        'editor.state_value': 'Valeur Ã©tat',
+        'editor.displayed_name': 'Nom affichÃ©',
+        'editor.custom_image': 'Image personnalisÃ©e',
         'editor.name_font_size': 'Taille police nom',
-        'editor.state_font_size': 'Taille police état',
-        'editor.last_changed_font_size': 'Taille police dernière mise à jour',
+        'editor.state_font_size': 'Taille police Ã©tat',
+        'editor.last_changed_font_size': 'Taille police derniÃ¨re mise Ã  jour',
         'editor.card_background': 'Fond carte',
         'editor.border_radius': 'Rayon bordure',
         'editor.image_size': 'Taille image (%)',
         'editor.modern_picture_size': 'Taille image (px)',
         'editor.modern_name_font_size': 'Taille police nom',
-        'editor.modern_state_font_size': 'Taille police état',
+        'editor.modern_state_font_size': 'Taille police Ã©tat',
         'editor.modern_show_battery_ring': 'Afficher anneau batterie',
         'editor.modern_show_travel_ring': 'Afficher anneau temps trajet',
         'editor.modern_travel_max_time': 'Temps trajet max (min)',
-        'editor.battery_state_sensor': 'Capteur état batterie (charge)',
-        'editor.watch_battery_state_sensor': 'Capteur état batterie montre',
+        'editor.modern_ring_size': 'Taille anneaux (px)',
+        'editor.classic_icon_size': 'Taille icÃ´nes (px)',
+        'editor.compact_icon_size': 'Taille icÃ´nes (px)',
+        'editor.battery_font_size': 'Taille police batterie',
+        'editor.activity_font_size': 'Taille police activitÃ©',
+        'editor.battery_state_sensor': 'Capteur Ã©tat charge tÃ©lÃ©phone',
+        'editor.battery_charging_value': 'Valeur Ã©tat en charge (optionnel)',
+        'editor.watch_battery_state_sensor': 'Capteur Ã©tat charge montre',
+        'editor.watch_battery_charging_value': 'Valeur Ã©tat en charge montre (optionnel)',
+        'editor.charging_helper': 'Laisser vide pour dÃ©tection auto (charging, full, on, true...)',
         'section.automatic_sensors': 'Capteurs Automatiques',
-        'section.sensors_description': 'Les capteurs sont détectés automatiquement selon l\'entité personne sélectionnée. Modèle par défaut: sensor.phone_',
-        'section.element_positions': 'Positions Éléments',
-        'section.positions_description': 'Configurer la position de chaque élément sur la carte. Disponible uniquement en mode Classic.',
-        'section.custom_states': 'États Personnalisés',
-        'section.states_description': 'Configurer comment les différents états de la personne sont affichés',
+        'section.sensors_description': 'Les capteurs sont dÃ©tectÃ©s automatiquement selon l\'entitÃ© personne sÃ©lectionnÃ©e. ModÃ¨le par dÃ©faut: sensor.phone_',
+        'section.element_positions': 'Positions Ã‰lÃ©ments',
+        'section.positions_description': 'Configurer la position de chaque Ã©lÃ©ment sur la carte. Disponible uniquement en mode Classic.',
+        'section.custom_states': 'Ã‰tats PersonnalisÃ©s',
+        'section.states_description': 'Configurer comment les diffÃ©rents Ã©tats de la personne sont affichÃ©s',
         'section.card_style': 'Personnalisation Style Carte',
         'section.modern_options': 'Options Layout Moderne',
+        'section.classic_options': 'Options Layout Classic',
+        'section.compact_options': 'Options Layout Compact',
         'position.battery': 'Position batterie',
         'position.watch_battery': 'Position batterie montre',
-        'position.activity': 'Position activité',
+        'position.activity': 'Position activitÃ©',
         'position.distance': 'Position distance',
         'position.travel': 'Position temps trajet',
         'position.connection': 'Position connexion',
         'state.name_color': 'Couleur nom',
-        'state.add_state': 'Ajouter État',
-        'default_state.home': '🏡 Maison',
-        'default_state.away': '🏃‍♂️ Absent de la Maison',
-        'default_state.office': '🏢 Bureau',
-        'default_state.unknown': '❓ Inconnu',
-        'state.default_states': 'États par Défaut',
-        'state.add_default_states': 'Ajouter États par Défaut',
+        'state.add_state': 'Ajouter Ã‰tat',
+        'default_state.home': 'ðŸ¡ Maison',
+        'default_state.away': 'ðŸƒâ€â™‚ï¸ Absent de la Maison',
+        'default_state.office': 'ðŸ¢ Bureau',
+        'default_state.unknown': 'â“ Inconnu',
+        'state.default_states': 'Ã‰tats par DÃ©faut',
+        'state.add_default_states': 'Ajouter Ã‰tats par DÃ©faut',
         'tabs.base': 'Base',
         'tabs.layout': 'Disposition',
         'tabs.display': 'Affichage',
         'tabs.positions': 'Positions',
-        'tabs.states': 'États',
+        'tabs.states': 'Ã‰tats',
         'tabs.sensors': 'Capteurs',
         'tabs.style': 'Style'
       },
       'de': {
-        'editor.entity': 'Entität',
+        'editor.entity': 'EntitÃ¤t',
         'editor.name': 'Name (optional)',
-        'editor.show_last_changed': 'Letzte Änderung anzeigen',
+        'editor.show_last_changed': 'Letzte Ã„nderung anzeigen',
         'editor.show_distance': 'Entfernung anzeigen',
         'editor.show_battery': 'Batterie anzeigen',
         'editor.show_speed': 'Geschwindigkeit anzeigen',
         'editor.show_direction': 'Richtung anzeigen',
         'editor.show_accuracy': 'Genauigkeit anzeigen',
         'editor.show_gps_accuracy': 'GPS-Genauigkeit anzeigen',
-        'editor.show_altitude': 'Höhe anzeigen',
+        'editor.show_altitude': 'HÃ¶he anzeigen',
         'editor.show_source': 'Quelle anzeigen',
         'editor.show_entity_picture': 'Bild anzeigen',
         'editor.show_name': ' Status anzeigen',
         'editor.show_person_name': 'Personenname anzeigen',
-        'editor.show_activity': 'Aktivität anzeigen',
+        'editor.show_activity': 'AktivitÃ¤t anzeigen',
         'editor.show_watch_battery': 'Uhr-Batterie anzeigen',
         'editor.show_travel_time': 'Reisezeit anzeigen',
         'editor.show_connection': 'Verbindung anzeigen',
@@ -315,51 +345,61 @@ class EditorLocalizationHelper {
         'editor.compact_width': 'Kompakte Breite (px)',
         'editor.modern_width': 'Moderne Breite (px)',
         'editor.custom_image_url': 'Benutzerdefinierte Bild-URL',
-        'editor.aspect_ratio': 'Seitenverhältnis',
+        'editor.aspect_ratio': 'SeitenverhÃ¤ltnis',
         'editor.state_value': 'Statuswert',
         'editor.displayed_name': 'Angezeigter Name',
         'editor.custom_image': 'Benutzerdefiniertes Bild',
-        'editor.name_font_size': 'Schriftgröße Name',
-        'editor.state_font_size': 'Schriftgröße Status',
-        'editor.last_changed_font_size': 'Schriftgröße Letzte Änderung',
+        'editor.name_font_size': 'SchriftgrÃ¶ÃŸe Name',
+        'editor.state_font_size': 'SchriftgrÃ¶ÃŸe Status',
+        'editor.last_changed_font_size': 'SchriftgrÃ¶ÃŸe Letzte Ã„nderung',
         'editor.card_background': 'Kartenhintergrund',
         'editor.border_radius': 'Randradius',
-        'editor.image_size': 'Bildgröße (%)',
-        'editor.modern_picture_size': 'Bildgröße (px)',
-        'editor.modern_name_font_size': 'Schriftgröße Name',
-        'editor.modern_state_font_size': 'Schriftgröße Status',
+        'editor.image_size': 'BildgrÃ¶ÃŸe (%)',
+        'editor.modern_picture_size': 'BildgrÃ¶ÃŸe (px)',
+        'editor.modern_name_font_size': 'SchriftgrÃ¶ÃŸe Name',
+        'editor.modern_state_font_size': 'SchriftgrÃ¶ÃŸe Status',
         'editor.modern_show_battery_ring': 'Batteriering anzeigen',
         'editor.modern_show_travel_ring': 'Reisezeitring anzeigen',
         'editor.modern_travel_max_time': 'Max Reisezeit (min)',
-        'editor.battery_state_sensor': 'Batteriestatussensor (Laden)',
-        'editor.watch_battery_state_sensor': 'Uhr-Batteriestatussensor',
+        'editor.modern_ring_size': 'RinggrÃ¶ÃŸe (px)',
+        'editor.classic_icon_size': 'SymbolgrÃ¶ÃŸe (px)',
+        'editor.compact_icon_size': 'SymbolgrÃ¶ÃŸe (px)',
+        'editor.battery_font_size': 'SchriftgrÃ¶ÃŸe Batterie',
+        'editor.activity_font_size': 'SchriftgrÃ¶ÃŸe AktivitÃ¤t',
+        'editor.battery_state_sensor': 'Telefon-Ladezustandssensor',
+        'editor.battery_charging_value': 'Ladezustandswert (optional)',
+        'editor.watch_battery_state_sensor': 'Uhr-Ladezustandssensor',
+        'editor.watch_battery_charging_value': 'Uhr-Ladezustandswert (optional)',
+        'editor.charging_helper': 'Leer lassen fÃ¼r Auto-Erkennung (charging, full, on, true...)',
         'section.automatic_sensors': 'Automatische Sensoren',
-        'section.sensors_description': 'Sensoren werden automatisch basierend auf der ausgewählten Personenentität erkannt. Standardmuster: sensor.phone_',
+        'section.sensors_description': 'Sensoren werden automatisch basierend auf der ausgewÃ¤hlten PersonenentitÃ¤t erkannt. Standardmuster: sensor.phone_',
         'section.element_positions': 'Elementpositionen',
-        'section.positions_description': 'Konfigurieren Sie die Position jedes Elements auf der Karte. Nur im Classic-Layout verfügbar.',
-        'section.custom_states': 'Benutzerdefinierte Zustände',
-        'section.states_description': 'Konfigurieren Sie, wie die verschiedenen Personenzustände angezeigt werden',
+        'section.positions_description': 'Konfigurieren Sie die Position jedes Elements auf der Karte. Nur im Classic-Layout verfÃ¼gbar.',
+        'section.custom_states': 'Benutzerdefinierte ZustÃ¤nde',
+        'section.states_description': 'Konfigurieren Sie, wie die verschiedenen PersonenzustÃ¤nde angezeigt werden',
         'section.card_style': 'Karten-Stil Anpassung',
         'section.modern_options': 'Moderne Layout-Optionen',
+        'section.classic_options': 'Classic Layout-Optionen',
+        'section.compact_options': 'Compact Layout-Optionen',
         'position.battery': 'Batterieposition',
         'position.watch_battery': 'Uhr-Batterieposition',
-        'position.activity': 'Aktivitätsposition',
+        'position.activity': 'AktivitÃ¤tsposition',
         'position.distance': 'Entfernungsposition',
         'position.travel': 'Reisezeitposition',
         'position.connection': 'Verbindungsposition',
         'state.name_color': 'Namensfarbe',
-        'state.add_state': 'Zustand Hinzufügen',
-        'default_state.home': '🏡 Zuhause',
-        'default_state.away': '🏃‍♂️ Nicht Zuhause',
-        'default_state.office': '🏢 Büro',
-        'default_state.unknown': '❓ Unbekannt',
-        'state.default_states': 'Standardzustände',
-        'state.add_default_states': 'Standardzustände Hinzufügen',
+        'state.add_state': 'Zustand HinzufÃ¼gen',
+        'default_state.home': 'ðŸ¡ Zuhause',
+        'default_state.away': 'ðŸƒâ€â™‚ï¸ Nicht Zuhause',
+        'default_state.office': 'ðŸ¢ BÃ¼ro',
+        'default_state.unknown': 'â“ Unbekannt',
+        'state.default_states': 'StandardzustÃ¤nde',
+        'state.add_default_states': 'StandardzustÃ¤nde HinzufÃ¼gen',
         'tabs.base': 'Basis',
         'tabs.layout': 'Layout',
         'tabs.display': 'Anzeige',
         'tabs.positions': 'Positionen',
-        'tabs.states': 'Zustände',
+        'tabs.states': 'ZustÃ¤nde',
         'tabs.sensors': 'Sensoren',
         'tabs.style': 'Stil'
       }
@@ -887,15 +927,31 @@ class PersonTrackerCardEditor extends LitElement {
             </ha-switch>
           </div>
 
-          ${this._config.show_battery !== false ? html`
-            <ha-entity-picker
-              .hass=${this.hass}
-              .value=${this._config.battery_sensor || `sensor.phone_${entityBase}_battery_level`}
-              .label=${this._t('editor.show_battery')}
-              .includeDomains=${['sensor']}
-              @value-changed=${(e) => this._valueChanged(e, 'battery_sensor')}>
-            </ha-entity-picker>
-          ` : ''}
+          <ha-entity-picker
+            .hass=${this.hass}
+            .value=${this._config.battery_sensor || ''}
+            .label=${'sensor.phone_' + entityBase + '_battery_level'}
+            .includeDomains=${['sensor', 'input_number']}
+            allow-custom-entity
+            @value-changed=${(e) => this._valueChanged(e, 'battery_sensor')}>
+          </ha-entity-picker>
+
+          <!-- Battery charging state sensor -->
+          <ha-entity-picker
+            .hass=${this.hass}
+            .value=${this._config.battery_state_sensor || ''}
+            .label=${'sensor.phone_' + entityBase + '_battery_state'}
+            .includeDomains=${['sensor', 'binary_sensor']}
+            allow-custom-entity
+            @value-changed=${(e) => this._entityPickerChanged(e, 'battery_state_sensor')}>
+          </ha-entity-picker>
+
+          <ha-textfield
+            .value=${this._config.battery_charging_value || ''}
+            .label=${this._t('editor.battery_charging_value')}
+            .helper=${this._t('editor.charging_helper')}
+            @input=${(e) => this._valueChanged(e, 'battery_charging_value')}>
+          </ha-textfield>
         </div>
 
         <!-- Watch Battery -->
@@ -909,15 +965,31 @@ class PersonTrackerCardEditor extends LitElement {
             </ha-switch>
           </div>
 
-          ${this._config.show_watch_battery !== false ? html`
-            <ha-entity-picker
-              .hass=${this.hass}
-              .value=${this._config.watch_battery_sensor || `sensor.watch_${entityBase}_battery_level`}
-              .label=${this._t('editor.show_watch_battery')}
-              .includeDomains=${['sensor']}
-              @value-changed=${(e) => this._valueChanged(e, 'watch_battery_sensor')}>
-            </ha-entity-picker>
-          ` : ''}
+          <ha-entity-picker
+            .hass=${this.hass}
+            .value=${this._config.watch_battery_sensor || ''}
+            .label=${'sensor.watch_' + entityBase + '_battery_level'}
+            .includeDomains=${['sensor', 'input_number']}
+            allow-custom-entity
+            @value-changed=${(e) => this._valueChanged(e, 'watch_battery_sensor')}>
+          </ha-entity-picker>
+
+          <!-- Watch battery charging state sensor -->
+          <ha-entity-picker
+            .hass=${this.hass}
+            .value=${this._config.watch_battery_state_sensor || ''}
+            .label=${'sensor.watch_' + entityBase + '_battery_state'}
+            .includeDomains=${['sensor', 'binary_sensor']}
+            allow-custom-entity
+            @value-changed=${(e) => this._entityPickerChanged(e, 'watch_battery_state_sensor')}>
+          </ha-entity-picker>
+
+          <ha-textfield
+            .value=${this._config.watch_battery_charging_value || ''}
+            .label=${this._t('editor.watch_battery_charging_value')}
+            .helper=${this._t('editor.charging_helper')}
+            @input=${(e) => this._valueChanged(e, 'watch_battery_charging_value')}>
+          </ha-textfield>
         </div>
 
         <!-- Activity -->
@@ -931,15 +1003,14 @@ class PersonTrackerCardEditor extends LitElement {
             </ha-switch>
           </div>
 
-          ${this._config.show_activity !== false ? html`
-            <ha-entity-picker
-              .hass=${this.hass}
-              .value=${this._config.activity_sensor || `sensor.phone_${entityBase}_activity`}
-              .label=${this._t('editor.show_activity')}
-              .includeDomains=${['sensor']}
-              @value-changed=${(e) => this._valueChanged(e, 'activity_sensor')}>
-            </ha-entity-picker>
-          ` : ''}
+          <ha-entity-picker
+            .hass=${this.hass}
+            .value=${this._config.activity_sensor || ''}
+            .label=${'sensor.phone_' + entityBase + '_activity'}
+            .includeDomains=${['sensor']}
+            allow-custom-entity
+            @value-changed=${(e) => this._valueChanged(e, 'activity_sensor')}>
+          </ha-entity-picker>
         </div>
 
         <!-- Connection -->
@@ -953,15 +1024,14 @@ class PersonTrackerCardEditor extends LitElement {
             </ha-switch>
           </div>
 
-          ${this._config.show_connection !== false ? html`
-            <ha-entity-picker
-              .hass=${this.hass}
-              .value=${this._config.connection_sensor || `sensor.phone_${entityBase}_connection_type`}
-              .label=${this._t('editor.show_connection')}
-              .includeDomains=${['sensor']}
-              @value-changed=${(e) => this._valueChanged(e, 'connection_sensor')}>
-            </ha-entity-picker>
-          ` : ''}
+          <ha-entity-picker
+            .hass=${this.hass}
+            .value=${this._config.connection_sensor || ''}
+            .label=${'sensor.phone_' + entityBase + '_connection_type'}
+            .includeDomains=${['sensor', 'binary_sensor']}
+            allow-custom-entity
+            @value-changed=${(e) => this._valueChanged(e, 'connection_sensor')}>
+          </ha-entity-picker>
         </div>
 
         <!-- Distance -->
@@ -975,15 +1045,14 @@ class PersonTrackerCardEditor extends LitElement {
             </ha-switch>
           </div>
 
-          ${this._config.show_distance !== false ? html`
-            <ha-entity-picker
-              .hass=${this.hass}
-              .value=${this._config.distance_sensor || `sensor.waze_${entityBase}`}
-              .label=${this._t('editor.show_distance')}
-              .includeDomains=${['sensor']}
-              @value-changed=${(e) => this._valueChanged(e, 'distance_sensor')}>
-            </ha-entity-picker>
-          ` : ''}
+          <ha-entity-picker
+            .hass=${this.hass}
+            .value=${this._config.distance_sensor || ''}
+            .label=${'sensor.waze_' + entityBase}
+            .includeDomains=${['sensor', 'input_number']}
+            allow-custom-entity
+            @value-changed=${(e) => this._valueChanged(e, 'distance_sensor')}>
+          </ha-entity-picker>
         </div>
 
         <!-- Travel Time -->
@@ -997,15 +1066,14 @@ class PersonTrackerCardEditor extends LitElement {
             </ha-switch>
           </div>
 
-          ${this._config.show_travel_time !== false ? html`
-            <ha-entity-picker
-              .hass=${this.hass}
-              .value=${this._config.travel_sensor || `sensor.home_work_${entityBase}`}
-              .label=${this._t('editor.show_travel_time')}
-              .includeDomains=${['sensor']}
-              @value-changed=${(e) => this._valueChanged(e, 'travel_sensor')}>
-            </ha-entity-picker>
-          ` : ''}
+          <ha-entity-picker
+            .hass=${this.hass}
+            .value=${this._config.travel_sensor || ''}
+            .label=${'sensor.home_work_' + entityBase}
+            .includeDomains=${['sensor', 'input_number']}
+            allow-custom-entity
+            @value-changed=${(e) => this._valueChanged(e, 'travel_sensor')}>
+          </ha-entity-picker>
         </div>
       </div>
     `;
@@ -1184,10 +1252,59 @@ class PersonTrackerCardEditor extends LitElement {
         ` : ''}
       </div>
 
+      <!-- Classic Layout Options -->
+      ${this._config.layout === 'classic' ? html`
+        <div class="section">
+          <div class="section-title">${this._t('section.classic_options')}</div>
+
+          <ha-textfield
+            label="${this._t('editor.classic_icon_size')}"
+            type="number"
+            min="12"
+            max="32"
+            .value=${this._config.classic_icon_size || '16'}
+            @input=${(e) => this._valueChanged(e, 'classic_icon_size')}
+            helper-text="Default: 16px (icon size for indicators)">
+          </ha-textfield>
+
+          <ha-textfield
+            label="${this._t('editor.battery_font_size')}"
+            .value=${this._config.battery_font_size || '13px'}
+            @input=${(e) => this._valueChanged(e, 'battery_font_size')}
+            helper-text="Default: 13px">
+          </ha-textfield>
+
+          <ha-textfield
+            label="${this._t('editor.activity_font_size')}"
+            .value=${this._config.activity_font_size || '13px'}
+            @input=${(e) => this._valueChanged(e, 'activity_font_size')}
+            helper-text="Default: 13px">
+          </ha-textfield>
+        </div>
+      ` : ''}
+
+      <!-- Compact Layout Options -->
+      ${this._config.layout === 'compact' ? html`
+        <div class="section">
+          <div class="section-title">${this._t('section.compact_options')}</div>
+
+          <ha-textfield
+            label="${this._t('editor.compact_icon_size')}"
+            type="number"
+            min="12"
+            max="32"
+            .value=${this._config.compact_icon_size || '16'}
+            @input=${(e) => this._valueChanged(e, 'compact_icon_size')}
+            helper-text="Default: 16px (scales entire card proportionally)">
+          </ha-textfield>
+        </div>
+      ` : ''}
+
+      <!-- Modern Layout Options -->
       ${this._config.layout === 'modern' ? html`
         <div class="section">
           <div class="section-title">${this._t('section.modern_options')}</div>
-          
+
           <ha-textfield
             label="${this._t('editor.modern_picture_size')}"
             type="number"
@@ -1196,6 +1313,16 @@ class PersonTrackerCardEditor extends LitElement {
             .value=${this._config.modern_picture_size || '40'}
             @input=${(e) => this._valueChanged(e, 'modern_picture_size')}
             helper-text="Default: 40px">
+          </ha-textfield>
+
+          <ha-textfield
+            label="${this._t('editor.modern_ring_size')}"
+            type="number"
+            min="28"
+            max="60"
+            .value=${this._config.modern_ring_size || '38'}
+            @input=${(e) => this._valueChanged(e, 'modern_ring_size')}
+            helper-text="Default: 38px (size of circular indicators)">
           </ha-textfield>
 
           <div class="two-column">
@@ -1280,16 +1407,53 @@ class PersonTrackerCardEditor extends LitElement {
       value = target.value;
     }
 
-    console.log(`_valueChanged called with configValue=${configValue} and value=`, value);
+    // Prevent infinite loops - check if value actually changed
+    const currentValue = this._config[configValue];
+    if (value === currentValue) {
+      return;
+    }
+
+    // Also check for empty string vs undefined equivalence
+    if ((value === '' || value === undefined || value === null) &&
+        (currentValue === '' || currentValue === undefined || currentValue === null)) {
+      return;
+    }
 
     if (value === '' || value === undefined) {
-      delete this._config[configValue];
+      const newConfig = { ...this._config };
+      delete newConfig[configValue];
+      this._config = newConfig;
     } else {
       this._config = { ...this._config, [configValue]: value };
     }
 
     this._fireEvent('config-changed', { config: this._config });
     this.requestUpdate();
+  }
+
+  // Dedicated handler for entity pickers to avoid infinite loops
+  _entityPickerChanged(ev, configValue) {
+    if (!this._config || !this.hass) return;
+
+    ev.stopPropagation();
+
+    const value = ev.detail?.value || '';
+    const currentValue = this._config[configValue] || '';
+
+    // Skip if value hasn't changed
+    if (value === currentValue) {
+      return;
+    }
+
+    if (value === '') {
+      const newConfig = { ...this._config };
+      delete newConfig[configValue];
+      this._config = newConfig;
+    } else {
+      this._config = { ...this._config, [configValue]: value };
+    }
+
+    this._fireEvent('config-changed', { config: this._config });
   }
 
 

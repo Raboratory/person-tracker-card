@@ -1,6 +1,7 @@
 // Person Tracker Card v1.2.0 - Multilanguage Version
 // Full support for all editor options
 // Languages: Italian (default), English, French, German
+// v1.2.2: Bug fix, battery state, animation,fixed light theme
 // v1.2.0: Added Modern layout with circular progress indicators for battery and travel time
 // v1.1.2: Added dynamic unit of measurement for distance sensor
 // v1.1.2: Activity icon now follows entity's icon attribute with fallback to predefined mapping
@@ -319,8 +320,13 @@ class PersonTrackerCard extends LitElement {
       distance_font_size: '12px',
       travel_font_size: '12px',
       connection_font_size: '12px',
+      // Classic layout options
+      classic_icon_size: 16,
+      // Compact layout options
+      compact_icon_size: 16,
       // Modern layout options
       modern_picture_size: 40,
+      modern_ring_size: 38,
       modern_show_battery_ring: true,
       modern_show_travel_ring: true,
       modern_travel_max_time: 60,
@@ -366,7 +372,7 @@ class PersonTrackerCard extends LitElement {
       }
     }
 
-    return this.config.triggers_update === 'all';
+    return false;
   }
 
   updated(changedProps) {
@@ -417,39 +423,66 @@ class PersonTrackerCard extends LitElement {
       const batteryEntityId = this.config.battery_sensor || `sensor.phone_${entityBase}_battery_level`;
       const batteryEntity = this.hass.states[batteryEntityId];
       if (batteryEntity) {
-        this._batteryLevel = parseFloat(batteryEntity.state) || 0;
-        this._batteryIcon = batteryEntity.attributes?.icon || 'mdi:battery';
+        const newLevel = parseFloat(batteryEntity.state) || 0;
+        const newIcon = batteryEntity.attributes?.icon || 'mdi:battery';
+
+        // SOLO se il valore è cambiato, aggiorna
+        if (this._batteryLevel !== newLevel) {
+          this._batteryLevel = newLevel;
+        }
+        if (this._batteryIcon !== newIcon) {
+          this._batteryIcon = newIcon;
+        }
       }
-      
+
       // Battery charging state
       if (this.config.battery_state_sensor) {
         const batteryStateEntity = this.hass.states[this.config.battery_state_sensor];
         if (batteryStateEntity) {
-          const state = batteryStateEntity.state.toLowerCase();
-          this._batteryCharging = state === 'charging' || state === 'in carica' || state === 'full';
+          const newChargingState = this._isChargingState(
+            batteryStateEntity.state,
+            this.config.battery_charging_value
+          );
+
+          if (this._batteryCharging !== newChargingState) {
+            this._batteryCharging = newChargingState;
+          }
         }
       }
     }
-    
+
     // Watch Battery
     if (this.config.show_watch_battery) {
       const watchBatteryEntityId = this.config.watch_battery_sensor || `sensor.watch_${entityBase}_battery_level`;
       const watchBatteryEntity = this.hass.states[watchBatteryEntityId];
       if (watchBatteryEntity) {
-        this._watchBatteryLevel = parseFloat(watchBatteryEntity.state) || 0;
-        this._watchBatteryIcon = watchBatteryEntity.attributes?.icon || 'mdi:battery';
+        const newLevel = parseFloat(watchBatteryEntity.state) || 0;
+        const newIcon = watchBatteryEntity.attributes?.icon || 'mdi:battery';
+
+        if (this._watchBatteryLevel !== newLevel) {
+          this._watchBatteryLevel = newLevel;
+        }
+        if (this._watchBatteryIcon !== newIcon) {
+          this._watchBatteryIcon = newIcon;
+        }
       }
-      
+
       // Watch Battery charging state
       if (this.config.watch_battery_state_sensor) {
         const watchBatteryStateEntity = this.hass.states[this.config.watch_battery_state_sensor];
         if (watchBatteryStateEntity) {
-          const state = watchBatteryStateEntity.state.toLowerCase();
-          this._watchBatteryCharging = state === 'charging' || state === 'in carica' || state === 'full';
+          const newChargingState = this._isChargingState(
+            watchBatteryStateEntity.state,
+            this.config.watch_battery_charging_value
+          );
+
+          if (this._watchBatteryCharging !== newChargingState) {
+            this._watchBatteryCharging = newChargingState;
+          }
         }
       }
     }
-    
+
     // Activity
     if (this.config.show_activity) {
       const activityEntityId = this.config.activity_sensor || `sensor.phone_${entityBase}_activity`;
@@ -472,17 +505,21 @@ class PersonTrackerCard extends LitElement {
       const connectionEntity = this.hass.states[connectionEntityId];
       if (connectionEntity) {
         this._connectionType = connectionEntity.state;
+        // Legge l'icona dall'entità se disponibile
+        this._connectionIcon = connectionEntity.attributes?.icon || null;
       }
     }
 
     // Distance
     if (this.config.show_distance) {
       const distanceEntityId = this.config.distance_sensor || `sensor.waze_${entityBase}`;
-      const wazeEntity = this.hass.states[distanceEntityId];
-      if (wazeEntity) {
-        this._distanceFromHome = parseFloat(wazeEntity.state) || 0;
+      const distanceEntity = this.hass.states[distanceEntityId];
+      if (distanceEntity) {
+        this._distanceFromHome = parseFloat(distanceEntity.state) || 0;
         // Legge l'unità di misura dall'entità, default 'km'
-        this._distanceUnit = wazeEntity.attributes?.unit_of_measurement || 'km';
+        this._distanceUnit = distanceEntity.attributes?.unit_of_measurement || 'km';
+        // Legge l'icona dall'entità se disponibile
+        this._distanceIcon = distanceEntity.attributes?.icon || 'mdi:map-marker-distance';
       }
     }
 
@@ -492,6 +529,8 @@ class PersonTrackerCard extends LitElement {
       const travelEntity = this.hass.states[travelEntityId];
       if (travelEntity) {
         this._travelTime = parseFloat(travelEntity.state) || 0;
+        // Legge l'icona dall'entità se disponibile
+        this._travelIcon = travelEntity.attributes?.icon || 'mdi:car-clock';
       }
     }
   }
@@ -535,6 +574,31 @@ class PersonTrackerCard extends LitElement {
     if (!connectionType) return false;
     const normalized = connectionType.toLowerCase().replace(/[-_\s]/g, '');
     return normalized === 'wifi';
+  }
+
+  // Open more-info dialog for an entity
+  _showMoreInfo(entityId) {
+    if (!entityId) return;
+    const event = new CustomEvent('hass-more-info', {
+      bubbles: true,
+      composed: true,
+      detail: { entityId }
+    });
+    this.dispatchEvent(event);
+  }
+
+  // Get sensor entity ID for a specific type
+  _getSensorEntityId(type) {
+    const entityBase = this.config.entity?.split('.')[1] || '';
+    const sensorMap = {
+      'battery': this.config.battery_sensor || `sensor.phone_${entityBase}_battery_level`,
+      'watch_battery': this.config.watch_battery_sensor || `sensor.watch_${entityBase}_battery_level`,
+      'activity': this.config.activity_sensor || `sensor.phone_${entityBase}_activity`,
+      'connection': this.config.connection_sensor || `sensor.phone_${entityBase}_connection_type`,
+      'distance': this.config.distance_sensor || `sensor.waze_${entityBase}`,
+      'travel': this.config.travel_sensor || `sensor.home_work_${entityBase}`
+    };
+    return sensorMap[type] || null;
   }
 
   _getCurrentStateConfig() {
@@ -591,11 +655,97 @@ class PersonTrackerCard extends LitElement {
   // Get border color based on person state
   _getStateBorderColor(state) {
     if (!state) return 'gray';
-    
+
     const lowerState = state.toLowerCase();
     if (lowerState === 'home') return '#50A14F';
     if (lowerState === 'not_home') return '#e45649';
     return '#ff9800'; // orange for other locations (zones)
+  }
+
+  // Get ring background color - adapts to light/dark theme
+  _getRingBackgroundColor() {
+    // Try to detect theme from CSS variables
+    if (this.shadowRoot) {
+      const computedStyle = getComputedStyle(this);
+      const bgColor = computedStyle.getPropertyValue('--primary-background-color').trim();
+
+      // If we can get the background color, check if it's light or dark
+      if (bgColor) {
+        // Parse the color to determine brightness
+        const isLight = this._isLightColor(bgColor);
+        return isLight ? '#d0d0d0' : '#333333';
+      }
+    }
+    // Default to dark theme background
+    return '#333333';
+  }
+
+  // Check if a color is light (for theme detection)
+  _isLightColor(color) {
+    // Handle rgb/rgba format
+    const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (rgbMatch) {
+      const r = parseInt(rgbMatch[1]);
+      const g = parseInt(rgbMatch[2]);
+      const b = parseInt(rgbMatch[3]);
+      // Calculate relative luminance
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return luminance > 0.5;
+    }
+
+    // Handle hex format
+    const hexMatch = color.match(/^#?([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/);
+    if (hexMatch) {
+      let hex = hexMatch[1];
+      if (hex.length === 3) {
+        hex = hex.split('').map(c => c + c).join('');
+      }
+      const r = parseInt(hex.substr(0, 2), 16);
+      const g = parseInt(hex.substr(2, 2), 16);
+      const b = parseInt(hex.substr(4, 2), 16);
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return luminance > 0.5;
+    }
+
+    // Default to dark theme
+    return false;
+  }
+
+  // Check if battery is charging based on state value
+  // Supports custom value or auto-detection from predefined list
+  _isChargingState(stateValue, customChargingValue) {
+    if (!stateValue) return false;
+
+    const state = String(stateValue).toLowerCase().trim();
+
+    // If user specified a custom charging value, use exact match
+    if (customChargingValue) {
+      return state === customChargingValue.toLowerCase().trim();
+    }
+
+    // Auto-detect using predefined list of charging states
+    const CHARGING_STATES = [
+      'charging',      // iOS/Android Companion App
+      'in carica',     // Italian
+      'carica',        // Italian short
+      'full',          // Full battery (still connected)
+      'piena',         // Italian full
+      'on',            // Binary sensor
+      'true',          // Boolean
+      '1',             // Numeric boolean
+      'connected',     // Some devices
+      'ac',            // AC power
+      'usb',           // USB charging
+      'wireless',      // Wireless charging
+      'plugged',       // Plugged in
+      'yes',           // Some devices
+      'attivo',        // Italian active
+      'en charge',     // French
+      'laden',         // German
+      'aufladen'       // German
+    ];
+
+    return CHARGING_STATES.includes(state);
   }
 
   // Get travel time color based on value
@@ -660,12 +810,16 @@ class PersonTrackerCard extends LitElement {
     const travelPos = this._getPositionStyles(this.config.travel_position) || {};
     const connectionPos = this._getPositionStyles(this.config.connection_position) || {};
 
+    // Icon size configurabile
+    const iconSize = this.config.classic_icon_size || 16;
+    const iconStyle = `width: ${iconSize}px; height: ${iconSize}px;`;
+
     return html`
       <ha-card style="background: ${this.config.card_background}; border-radius: ${this.config.card_border_radius}">
         <div class="card-container" style="padding-bottom: ${paddingBottom}">
           <div class="card-content">
             <!-- Sezione superiore con foto, nome e stato -->
-            <div class="content-top">
+            <div class="content-top clickable" @click=${() => this._showMoreInfo(this.config.entity)} style="cursor: pointer;">
               ${this.config.show_entity_picture && entityPicture ? html`
                 <div class="entity-picture" style="width: ${this.config.picture_size}%;">
                   <img
@@ -705,59 +859,65 @@ class PersonTrackerCard extends LitElement {
             ` : ''}
 
             ${this.config.show_battery ? html`
-              <div class="custom-field battery"
+              <div class="custom-field battery clickable ${this._batteryCharging ? 'charging' : ''}"
+                   @click=${() => this._showMoreInfo(this._getSensorEntityId('battery'))}
                    style="color: ${this._getBatteryColor()};
                           font-size: ${this.config.battery_font_size};
                           ${Object.entries(batteryPos).map(([k, v]) => `${k}: ${v}`).join('; ')}">
                 <span>📱</span>
-                <ha-icon icon="${this._batteryIcon}" .style=${'width: 16px; height: 16px;'}></ha-icon>
+                <ha-icon icon="${this._batteryCharging ? 'mdi:battery-charging' : this._batteryIcon}" .style=${iconStyle}></ha-icon>
                 <span>${this._batteryLevel}%</span>
               </div>
             ` : ''}
 
             ${this.config.show_watch_battery ? html`
-              <div class="custom-field watch-battery"
+              <div class="custom-field watch-battery clickable ${this._watchBatteryCharging ? 'charging' : ''}"
+                   @click=${() => this._showMoreInfo(this._getSensorEntityId('watch_battery'))}
                    style="color: ${this._getBatteryColor(this._watchBatteryLevel)};
                           font-size: ${this.config.watch_battery_font_size};
                           ${Object.entries(watchBatteryPos).map(([k, v]) => `${k}: ${v}`).join('; ')}">
                 <span>⌚</span>
-                <ha-icon icon="${this._watchBatteryIcon}" .style=${'width: 16px; height: 16px;'}></ha-icon>
+                <ha-icon icon="${this._watchBatteryCharging ? 'mdi:battery-charging' : this._watchBatteryIcon}" .style=${iconStyle}></ha-icon>
                 <span>${this._watchBatteryLevel}%</span>
               </div>
             ` : ''}
 
             ${this.config.show_activity ? html`
-              <div class="custom-field activity"
+              <div class="custom-field activity clickable"
+                   @click=${() => this._showMoreInfo(this._getSensorEntityId('activity'))}
                    style="font-size: ${this.config.activity_font_size};
                           ${Object.entries(activityPos).map(([k, v]) => `${k}: ${v}`).join('; ')}">
-                <ha-icon icon="${activityIcon}" .style=${'width: 16px; height: 16px;'}></ha-icon>
+                <ha-icon icon="${activityIcon}" .style=${iconStyle}></ha-icon>
                 <span style="margin-left: 4px; font-size: 11px;">${this._activity}</span>
               </div>
             ` : ''}
 
             ${this.config.show_distance && this._distanceFromHome > 0 ? html`
-              <div class="custom-field distance"
+              <div class="custom-field distance clickable"
+                   @click=${() => this._showMoreInfo(this._getSensorEntityId('distance'))}
                    style="font-size: ${this.config.distance_font_size};
                           ${Object.entries(distancePos).map(([k, v]) => `${k}: ${v}`).join('; ')}">
-                <ha-icon icon="mdi:home" .style=${'width: 16px; height: 16px;'}></ha-icon>
+                <ha-icon icon="${this._distanceIcon || 'mdi:map-marker-distance'}" .style=${iconStyle}></ha-icon>
                 <span>${Math.round(this._distanceFromHome)} ${this._distanceUnit}</span>
               </div>
             ` : ''}
 
             ${this.config.show_travel_time && this._travelTime > 0 ? html`
-              <div class="custom-field travel"
+              <div class="custom-field travel clickable"
+                   @click=${() => this._showMoreInfo(this._getSensorEntityId('travel'))}
                    style="font-size: ${this.config.travel_font_size};
                           ${Object.entries(travelPos).map(([k, v]) => `${k}: ${v}`).join('; ')}">
-                <ha-icon icon="mdi:car-clock" .style=${'width: 16px; height: 16px;'}></ha-icon>
+                <ha-icon icon="${this._travelIcon || 'mdi:car-clock'}" .style=${iconStyle}></ha-icon>
                 <span>${Math.round(this._travelTime)} min</span>
               </div>
             ` : ''}
 
             ${this.config.show_connection ? html`
-              <div class="custom-field wifi"
+              <div class="custom-field wifi clickable"
+                   @click=${() => this._showMoreInfo(this._getSensorEntityId('connection'))}
                    style="font-size: ${this.config.connection_font_size};
                           ${Object.entries(connectionPos).map(([k, v]) => `${k}: ${v}`).join('; ')}">
-                <ha-icon icon="${connectionIcon}" .style=${'width: 16px; height: 16px;'}></ha-icon>
+                <ha-icon icon="${this._connectionIcon || connectionIcon}" .style=${iconStyle}></ha-icon>
               </div>
             ` : ''}
           </div>
@@ -796,66 +956,80 @@ class PersonTrackerCard extends LitElement {
     // Larghezza configurabile
     const maxWidth = this.config.compact_width || 300;
 
+    // Icon size configurabile - tutto si scala proporzionalmente
+    const iconSize = this.config.compact_icon_size || 16;
+    const badgeSize = iconSize * 2; // Il badge è il doppio dell'icona
+    const smallIconSize = Math.max(10, Math.round(iconSize * 0.75));
+    const badgeFontSize = Math.max(8, Math.round(iconSize * 0.56)); // Font proporzionale
+    const smallFontSize = Math.max(7, Math.round(iconSize * 0.5));
+    const pictureSize = Math.max(36, Math.round(iconSize * 2.5)); // Immagine proporzionale
+    const nameFontSize = Math.max(12, Math.round(iconSize * 0.875));
+    const locationFontSize = Math.max(9, Math.round(iconSize * 0.625));
+    const cardPadding = Math.max(6, Math.round(iconSize * 0.5));
+    const badgeGap = Math.max(4, Math.round(iconSize * 0.5));
+
     return html`
-      <ha-card style="background: ${this.config.card_background}; border-radius: ${this.config.card_border_radius}; padding: 8px; max-width: ${maxWidth}px;">
+      <ha-card style="background: ${this.config.card_background}; border-radius: ${this.config.card_border_radius}; padding: ${cardPadding}px; max-width: ${maxWidth}px;">
         <div class="compact-grid">
           ${this.config.show_entity_picture && entityPicture ? html`
-            <div class="compact-picture">
-              <img src="${entityPicture}" alt="${personName}" />
+            <div class="compact-picture clickable" @click=${() => this._showMoreInfo(this.config.entity)}>
+              <img src="${entityPicture}" alt="${personName}" style="width: ${pictureSize}px; height: ${pictureSize}px;" />
             </div>
           ` : ''}
 
           ${this.config.show_name ? html`
-            <div class="compact-name" style="color: inherit">
+            <div class="compact-name clickable" @click=${() => this._showMoreInfo(this.config.entity)} style="color: inherit; cursor: pointer; font-size: ${nameFontSize}px;">
               ${personName}
             </div>
           ` : ''}
 
-          <div class="compact-location" style="color: ${stateStyles.color || 'var(--secondary-text-color)'}">
+          <div class="compact-location clickable" @click=${() => this._showMoreInfo(this.config.entity)} style="color: ${stateStyles.color || 'var(--secondary-text-color)'}; cursor: pointer; font-size: ${locationFontSize}px;">
             ${displayLocation}
           </div>
 
-          <div class="compact-icons">
+          <div class="compact-icons" style="gap: ${badgeGap}px;">
             ${this.config.show_activity ? html`
-              <div class="compact-icon-badge">
-                <ha-icon icon="${activityIcon}" style="--mdc-icon-size: 16px; color: ${activityColor};"></ha-icon>
+              <div class="compact-icon-badge clickable" @click=${() => this._showMoreInfo(this._getSensorEntityId('activity'))} style="width: ${badgeSize}px; height: ${badgeSize}px;">
+                <ha-icon icon="${activityIcon}" style="--mdc-icon-size: ${iconSize}px; color: ${activityColor};"></ha-icon>
               </div>
             ` : ''}
 
             ${this.config.show_connection ? html`
-              <div class="compact-icon-badge">
-                <ha-icon icon="${connectionIcon}" style="--mdc-icon-size: 16px; color: ${connectionColor};"></ha-icon>
+              <div class="compact-icon-badge clickable" @click=${() => this._showMoreInfo(this._getSensorEntityId('connection'))} style="width: ${badgeSize}px; height: ${badgeSize}px;">
+                <ha-icon icon="${this._connectionIcon || connectionIcon}" style="--mdc-icon-size: ${iconSize}px; color: ${connectionColor};"></ha-icon>
               </div>
             ` : ''}
 
             ${this.config.show_battery ? html`
-              <div class="compact-icon-badge">
-                <span style="font-size: 9px; font-weight: bold; color: ${batteryColor};">${this._batteryLevel}%</span>
+              <div class="compact-icon-badge clickable ${this._batteryCharging ? 'charging' : ''}" @click=${() => this._showMoreInfo(this._getSensorEntityId('battery'))} style="width: ${badgeSize}px; height: ${badgeSize}px;">
+                ${this._batteryCharging ? html`<ha-icon icon="mdi:lightning-bolt" style="--mdc-icon-size: ${Math.round(iconSize * 0.6)}px; color: #4CAF50; position: absolute; top: -2px; right: -2px;"></ha-icon>` : ''}
+                <span style="font-size: ${badgeFontSize}px; font-weight: bold; color: ${batteryColor};">${this._batteryLevel}%</span>
               </div>
             ` : ''}
 
             ${this.config.show_watch_battery ? html`
-              <div class="compact-icon-badge">
-                <span>⌚</span>
-                <span style="font-size: 9px; font-weight: bold; color: ${this._getBatteryColor(this._watchBatteryLevel)};">
+              <div class="compact-icon-badge clickable ${this._watchBatteryCharging ? 'charging' : ''}" @click=${() => this._showMoreInfo(this._getSensorEntityId('watch_battery'))} style="width: ${badgeSize}px; height: ${badgeSize}px; flex-direction: column; justify-content: center; align-items: center; gap: 0; line-height: 1; position: relative;">
+                ${this._watchBatteryCharging ? html`<ha-icon icon="mdi:lightning-bolt" style="--mdc-icon-size: ${Math.round(iconSize * 0.5)}px; color: #4CAF50; position: absolute; top: -2px; right: -2px;"></ha-icon>` : ''}
+                <span style="font-size: ${smallFontSize}px; line-height: 1;">⌚</span>
+                <span style="font-size: ${smallFontSize}px; font-weight: bold; color: ${this._getBatteryColor(this._watchBatteryLevel)}; line-height: 1;">
                   ${this._watchBatteryLevel}%
                 </span>
               </div>
             ` : ''}
 
             ${this.config.show_distance && this._distanceFromHome > 0 ? html`
-              <div class="compact-icon-badge" style="flex-direction: column;">
-                <ha-icon icon="mdi:home" style="--mdc-icon-size: 12px;"></ha-icon>
-                <span style="font-size: 8px; font-weight: bold; color: #4A9EFF; margin-top: -2px;">
+              <div class="compact-icon-badge clickable" @click=${() => this._showMoreInfo(this._getSensorEntityId('distance'))} style="width: ${badgeSize}px; height: ${badgeSize}px; flex-direction: column; justify-content: center; align-items: center; gap: 0; line-height: 1;">
+                <ha-icon icon="${this._distanceIcon || 'mdi:map-marker-distance'}" style="--mdc-icon-size: ${smallIconSize}px;"></ha-icon>
+                <span style="font-size: ${smallFontSize}px; font-weight: bold; color: #4A9EFF; line-height: 1;">
                   ${Math.round(this._distanceFromHome)}${this._distanceUnit}
                 </span>
               </div>
             ` : ''}
 
             ${this.config.show_travel_time && this._travelTime > 0 ? html`
-              <div class="compact-icon-badge" style="flex-direction: column;">
-                <ha-icon icon="mdi:car-clock" style="--mdc-icon-size: 12px;"></ha-icon>
-                <span style="font-size: 8px; font-weight: bold; margin-top: -2px;">
+              <div class="compact-icon-badge clickable" @click=${() => this._showMoreInfo(this._getSensorEntityId('travel'))} style="width: ${badgeSize}px; height: ${badgeSize}px; flex-direction: column; justify-content: center; align-items: center; gap: 0; line-height: 1;">
+                <ha-icon icon="${this._travelIcon || 'mdi:car-clock'}" style="--mdc-icon-size: ${smallIconSize}px;"></ha-icon>
+                <span style="font-size: ${smallFontSize}px; font-weight: bold; line-height: 1;">
                   ${Math.round(this._travelTime)}m
                 </span>
               </div>
@@ -913,32 +1087,44 @@ class PersonTrackerCard extends LitElement {
     // Picture size
     const pictureSize = this.config.modern_picture_size || 40;
 
+    // Ring size (configurable)
+    const ringSize = this.config.modern_ring_size || 38;
+    const ringValueFontSize = Math.max(9, Math.round(ringSize * 0.29)); // Scale font with ring
+    const ringUnitFontSize = Math.max(6, Math.round(ringSize * 0.18));
+    const ringIconSize = Math.max(16, Math.round(ringSize * 0.58));
+
+    // Ring background color (adapts to theme)
+    const ringBgColor = this._getRingBackgroundColor();
+
     // Width
     const maxWidth = this.config.modern_width || 300;
 
     return html`
       <ha-card style="background: ${this.config.card_background}; border-radius: ${this.config.card_border_radius}; padding: 10px 12px;">
         <div class="modern-container">
-          <!-- Picture with state-colored border -->
+          <!-- Picture with state-colored border - clicks open person entity -->
           ${this.config.show_entity_picture && entityPicture ? html`
-            <div class="modern-picture" style="
+            <div class="modern-picture clickable"
+                 @click=${() => this._showMoreInfo(this.config.entity)}
+                 style="
               border: 3px solid ${borderColor};
               border-radius: 50%;
               width: ${pictureSize}px;
               height: ${pictureSize}px;
               overflow: hidden;
               flex-shrink: 0;
+              cursor: pointer;
             ">
-              <img 
-                src="${entityPicture}" 
+              <img
+                src="${entityPicture}"
                 alt="${personName}"
                 style="width: 100%; height: 100%; object-fit: cover;"
               />
             </div>
           ` : ''}
 
-          <!-- Center: Name and State -->
-          <div class="modern-info">
+          <!-- Center: Name and State - clicks open person entity -->
+          <div class="modern-info clickable" @click=${() => this._showMoreInfo(this.config.entity)} style="cursor: pointer;">
             ${this.config.show_person_name ? html`
               <div style="font-size: ${this.config.modern_name_font_size || '14px'}; font-weight: bold; text-transform: uppercase; margin: 0; padding: 0;">
                 ${personName}
@@ -955,70 +1141,72 @@ class PersonTrackerCard extends LitElement {
           <div class="modern-rings">
             <!-- Battery -->
             ${this.config.show_battery ? html`
-              <div class="ring-container">
-                <svg viewBox="0 0 36 36" class="ring-svg">
-                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#333" stroke-width="3"/>
-                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="${batteryColor}" stroke-width="3" stroke-dasharray="${batteryLevel}, 100" stroke-linecap="round"/>
+              <div class="ring-container clickable ${this._batteryCharging ? 'charging' : ''}" @click=${() => this._showMoreInfo(this._getSensorEntityId('battery'))} style="width: ${ringSize}px; height: ${ringSize}px; position: relative;">
+                ${this._batteryCharging ? html`<ha-icon icon="mdi:lightning-bolt" style="--mdc-icon-size: ${Math.round(ringSize * 0.35)}px; color: #4CAF50; position: absolute; top: -4px; right: -4px; z-index: 1;"></ha-icon>` : ''}
+                <svg viewBox="0 0 36 36" class="ring-svg ${this._batteryCharging ? 'charging-ring' : ''}">
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="${ringBgColor}" stroke-width="3"/>
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="${this._batteryCharging ? '#4CAF50' : batteryColor}" stroke-width="3" stroke-dasharray="${batteryLevel}, 100" stroke-linecap="round"/>
                 </svg>
                 <div class="ring-text">
-                  <span class="ring-value">${batteryLevel}</span>
-                  <span class="ring-unit">%</span>
+                  <span class="ring-value" style="font-size: ${ringValueFontSize}px;">${batteryLevel}</span>
+                  <span class="ring-unit" style="font-size: ${ringUnitFontSize}px;">%</span>
                 </div>
               </div>
             ` : ''}
 
             <!-- Watch Battery -->
             ${this.config.show_watch_battery ? html`
-              <div class="ring-container">
-                <svg viewBox="0 0 36 36" class="ring-svg">
-                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#333" stroke-width="3"/>
-                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="${watchBatteryColor}" stroke-width="3" stroke-dasharray="${watchBatteryLevel}, 100" stroke-linecap="round"/>
+              <div class="ring-container clickable ${this._watchBatteryCharging ? 'charging' : ''}" @click=${() => this._showMoreInfo(this._getSensorEntityId('watch_battery'))} style="width: ${ringSize}px; height: ${ringSize}px; position: relative;">
+                ${this._watchBatteryCharging ? html`<ha-icon icon="mdi:lightning-bolt" style="--mdc-icon-size: ${Math.round(ringSize * 0.35)}px; color: #4CAF50; position: absolute; top: -4px; right: -4px; z-index: 1;"></ha-icon>` : ''}
+                <svg viewBox="0 0 36 36" class="ring-svg ${this._watchBatteryCharging ? 'charging-ring' : ''}">
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="${ringBgColor}" stroke-width="3"/>
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="${this._watchBatteryCharging ? '#4CAF50' : watchBatteryColor}" stroke-width="3" stroke-dasharray="${watchBatteryLevel}, 100" stroke-linecap="round"/>
                 </svg>
                 <div class="ring-text">
-                  <span class="ring-value">${watchBatteryLevel}</span>
-                  <span class="ring-unit">⌚</span>
+                  <span class="ring-value" style="font-size: ${ringValueFontSize}px;">${watchBatteryLevel}</span>
+                  <span class="ring-unit" style="font-size: ${ringUnitFontSize}px;">⌚</span>
                 </div>
               </div>
             ` : ''}
 
             <!-- Activity -->
             ${this.config.show_activity ? html`
-              <div class="ring-container ring-icon-only">
-                <ha-icon icon="${activityIcon}"></ha-icon>
+              <div class="ring-container ring-icon-only clickable" @click=${() => this._showMoreInfo(this._getSensorEntityId('activity'))} style="width: ${ringSize}px; height: ${ringSize}px;">
+                <ha-icon icon="${activityIcon}" style="--mdc-icon-size: ${ringIconSize}px;"></ha-icon>
               </div>
             ` : ''}
 
             <!-- Connection -->
             ${this.config.show_connection ? html`
-              <div class="ring-container ring-icon-only">
-                <ha-icon icon="${connectionIcon}" style="color: ${connectionColor};"></ha-icon>
+              <div class="ring-container ring-icon-only clickable" @click=${() => this._showMoreInfo(this._getSensorEntityId('connection'))} style="width: ${ringSize}px; height: ${ringSize}px;">
+                <ha-icon icon="${this._connectionIcon || connectionIcon}" style="color: ${connectionColor}; --mdc-icon-size: ${ringIconSize}px;"></ha-icon>
               </div>
             ` : ''}
 
             <!-- Distance -->
             ${this.config.show_distance ? html`
-              <div class="ring-container">
+              <div class="ring-container clickable" @click=${() => this._showMoreInfo(this._getSensorEntityId('distance'))} style="width: ${ringSize}px; height: ${ringSize}px;">
                 <svg viewBox="0 0 36 36" class="ring-svg">
-                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#333" stroke-width="3"/>
-                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#4A9EFF" stroke-width="3" stroke-dasharray="${distancePercentage}, 100" stroke-linecap="round"/>
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="${ringBgColor}" stroke-width="3"/>
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="${this._distanceColor || '#4A9EFF'}" stroke-width="3" stroke-dasharray="${distancePercentage}, 100" stroke-linecap="round"/>
                 </svg>
                 <div class="ring-text">
-                  <span class="ring-value">${distance}</span>
-                  <span class="ring-unit">${this._distanceUnit}</span>
+                  <span class="ring-value" style="font-size: ${ringValueFontSize}px;">${distance}</span>
+                  <span class="ring-unit" style="font-size: ${ringUnitFontSize}px;">${this._distanceUnit}</span>
                 </div>
               </div>
             ` : ''}
 
             <!-- Travel time -->
             ${this.config.show_travel_time ? html`
-              <div class="ring-container">
+              <div class="ring-container clickable" @click=${() => this._showMoreInfo(this._getSensorEntityId('travel'))} style="width: ${ringSize}px; height: ${ringSize}px;">
                 <svg viewBox="0 0 36 36" class="ring-svg">
-                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#333" stroke-width="3"/>
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="${ringBgColor}" stroke-width="3"/>
                   <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="${travelColor}" stroke-width="3" stroke-dasharray="${travelPercentage}, 100" stroke-linecap="round"/>
                 </svg>
                 <div class="ring-text">
-                  <span class="ring-value">${travelTime}</span>
-                  <span class="ring-unit">min</span>
+                  <span class="ring-value" style="font-size: ${ringValueFontSize}px;">${travelTime}</span>
+                  <span class="ring-unit" style="font-size: ${ringUnitFontSize}px;">min</span>
                 </div>
               </div>
             ` : ''}
@@ -1044,6 +1232,37 @@ class PersonTrackerCard extends LitElement {
 
       ha-card:hover {
         box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      }
+
+      /* Charging animation */
+      @keyframes charging-pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.6);
+        }
+        50% {
+          box-shadow: 0 0 0 8px rgba(76, 175, 80, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+        }
+      }
+
+      @keyframes charging-glow {
+        0%, 100% {
+          filter: brightness(1);
+        }
+        50% {
+          filter: brightness(1.3);
+        }
+      }
+
+      .charging {
+        animation: charging-glow 2s ease-in-out infinite;
+      }
+
+
+      .charging-ring {
+        animation: charging-glow 2s ease-in-out infinite;
       }
 
       .card-container {
@@ -1269,18 +1488,19 @@ class PersonTrackerCard extends LitElement {
         align-items: center;
         gap: 8px;
         padding-top: 6px;
-        border-top: 1px solid rgba(255,255,255,0.1);
+        border-top: 1px solid var(--divider-color, rgba(255,255,255,0.1));
         margin-top: 3px;
       }
 
       .compact-icon-badge {
-        background: rgba(255,255,255,0.1);
+        background: var(--secondary-background-color, rgba(255,255,255,0.1));
         border-radius: 50%;
         width: 32px;
         height: 32px;
         display: flex;
         align-items: center;
         justify-content: center;
+        color: var(--primary-text-color, #fff);
       }
 
       /* Modern Layout Styles */
@@ -1347,12 +1567,12 @@ class PersonTrackerCard extends LitElement {
       .ring-value {
         font-size: 11px;
         font-weight: bold;
-        color: #fff;
+        color: var(--primary-text-color, #fff);
       }
 
       .ring-unit {
         font-size: 7px;
-        color: #aaa;
+        color: var(--secondary-text-color, #aaa);
         margin-top: 1px;
       }
 
@@ -1360,12 +1580,26 @@ class PersonTrackerCard extends LitElement {
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(255,255,255,0.1);
+        background: var(--secondary-background-color, rgba(255,255,255,0.1));
         border-radius: 50%;
       }
 
       .ring-icon-only ha-icon {
         --mdc-icon-size: 22px;
+      }
+
+      .clickable {
+        cursor: pointer;
+        transition: transform 0.2s ease, opacity 0.2s ease;
+      }
+
+      .clickable:hover {
+        transform: scale(1.1);
+        opacity: 0.8;
+      }
+
+      .clickable:active {
+        transform: scale(0.95);
       }
 
       .circular-chart {
@@ -1398,7 +1632,7 @@ class PersonTrackerCard extends LitElement {
 if (!customElements.get('person-tracker-card')) {
   customElements.define('person-tracker-card', PersonTrackerCard);
   console.info(
-    '%c PERSON-TRACKER-CARD %c v1.2.0 %c! ',
+    '%c PERSON-TRACKER-CARD %c v1.2.2 %c! ',
     'background-color: #7DDA9F; color: black; font-weight: bold;',
     'background-color: #93ADCB; color: white; font-weight: bold;',
     'background-color: #FFD700; color: black; font-weight: bold;'
