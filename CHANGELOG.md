@@ -3,7 +3,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.2] - 2025-05-30
+## [1.2.3] - 2024-12-04
+
+### Fixed
+- Fixed German (de) translations encoding issues (ä, ö, ü, ß characters were corrupted)
+- Fixed French (fr) translations encoding issues (é, è, à characters)
+
+### Changed
+- Activity sensor is now automatically hidden when state is "unknown"
+
+## [1.2.2] - 2025-11-30
 
 ### Added
 - 📐 **Configurable Indicator Sizes** - New options to customize indicator dimensions for all layouts
