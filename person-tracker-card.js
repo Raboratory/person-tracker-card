@@ -882,7 +882,7 @@ class PersonTrackerCard extends LitElement {
               </div>
             ` : ''}
 
-            ${this.config.show_activity ? html`
+            ${this.config.show_activity && this.activity && this.activity.toLowerCase() !== 'unknown' ? html`
               <div class="custom-field activity clickable"
                    @click=${() => this._showMoreInfo(this._getSensorEntityId('activity'))}
                    style="font-size: ${this.config.activity_font_size};
@@ -988,7 +988,7 @@ class PersonTrackerCard extends LitElement {
           </div>
 
           <div class="compact-icons" style="gap: ${badgeGap}px;">
-            ${this.config.show_activity ? html`
+            ${this.config.show_activity && this.activity && this.activity.toLowerCase() !== 'unknown' ? html`
               <div class="compact-icon-badge clickable" @click=${() => this._showMoreInfo(this._getSensorEntityId('activity'))} style="width: ${badgeSize}px; height: ${badgeSize}px;">
                 <ha-icon icon="${activityIcon}" style="--mdc-icon-size: ${iconSize}px; color: ${activityColor};"></ha-icon>
               </div>
@@ -1170,7 +1170,7 @@ class PersonTrackerCard extends LitElement {
             ` : ''}
 
             <!-- Activity -->
-            ${this.config.show_activity ? html`
+            ${this.config.show_activity && this.activity && this.activity.toLowerCase() !== 'unknown' ? html`
               <div class="ring-container ring-icon-only clickable" @click=${() => this._showMoreInfo(this._getSensorEntityId('activity'))} style="width: ${ringSize}px; height: ${ringSize}px;">
                 <ha-icon icon="${activityIcon}" style="--mdc-icon-size: ${ringIconSize}px;"></ha-icon>
               </div>
