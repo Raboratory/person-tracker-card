@@ -1,6 +1,7 @@
 // Person Tracker Card v1.2.0 - Multilanguage Version
 // Full support for all editor options
 // Languages: Italian (default), English, French, German
+// v1.2.3 Fix Language fr,ge. Hide Activity Status when unknown
 // v1.2.2: Bug fix, battery state, animation,fixed light theme
 // v1.2.0: Added Modern layout with circular progress indicators for battery and travel time
 // v1.1.2: Added dynamic unit of measurement for distance sensor
@@ -1632,7 +1633,7 @@ class PersonTrackerCard extends LitElement {
 if (!customElements.get('person-tracker-card')) {
   customElements.define('person-tracker-card', PersonTrackerCard);
   console.info(
-    '%c PERSON-TRACKER-CARD %c v1.2.2 %c! ',
+    '%c PERSON-TRACKER-CARD %c v1.2.3 %c! ',
     'background-color: #7DDA9F; color: black; font-weight: bold;',
     'background-color: #93ADCB; color: white; font-weight: bold;',
     'background-color: #FFD700; color: black; font-weight: bold;'
